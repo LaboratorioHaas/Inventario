@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SELB Inspector</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{
+  --green:#00A859; --green-dark:#07341F; --bg:#F7F9F8; --card:#FFFFFF; --border:#E1E8E4;
+  --text:#23312B; --muted:#6B7A73; --red:#B23A32; --amber:#B8860B;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+header{background:var(--green-dark);color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+header h1{font-size:18px;margin:0;font-weight:700;}
+header .sub{color:#9FE0BC;font-size:12px;margin-top:2px;}
+.pill{background:rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:12px;display:flex;align-items:center;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;background:#8a8;}
+.dot.off{background:#c55;}
+.dot.on{background:#4CD37B;}
+button{cursor:pointer;font-family:inherit;}
+.btn{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:6px;padding:8px 14px;font-size:13px;font-weight:600;}
+.btn:hover{border-color:var(--green);}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff;}
+.btn.primary:hover{background:#00934c;}
+.btn.danger{background:#fff;border-color:#EFC9C4;color:var(--red);}
+.btn.danger:hover{background:#FBEAE8;}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,.35);color:#fff;}
+.btn.sm{padding:4px 9px;font-size:12px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+nav.tabs{display:flex;gap:4px;padding:10px 22px 0;background:var(--card);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+nav.tabs button{background:transparent;border:none;padding:10px 16px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;border-radius:0;}
+nav.tabs button.active{color:var(--green-dark);border-bottom-color:var(--green);}
+main{max-width:1280px;margin:0 auto;padding:22px;}
+.view{display:none;}
+.view.active{display:block;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:18px;}
+.card-title{font-weight:700;font-size:14px;margin-bottom:14px;color:var(--green-dark);}
+.profile-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.profile-tabs button{border:1px solid var(--border);background:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);}
+.profile-tabs button.active{background:var(--green-dark);border-color:var(--green-dark);color:#fff;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px 16px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.hidden{display:none;}
+.field label{font-size:12px;font-weight:600;color:var(--muted);}
+.field .required{color:var(--red);}
+.field input[type=text],.field select,.field input[type=date]{padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;background:#fff;color:var(--text);}
+.field input:focus,.field select:focus{outline:none;border-color:var(--green);}
+.radiorow{display:flex;gap:14px;align-items:center;font-size:13px;padding-top:4px;}
+.radiorow label{display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text);}
+.section{font-weight:700;font-size:13px;color:var(--green-dark);margin:20px 0 4px;padding-top:12px;border-top:1px solid var(--border);}
+.checklist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:10px;}
+.check{border:1px solid var(--border);border-radius:8px;padding:12px;background:#FAFCFB;}
+.check .done{float:right;font-size:11px;padding:2px 8px;border-radius:10px;background:#EEE;color:var(--muted);}
+.check .done.ok{background:#DFF3E8;color:var(--green-dark);}
+.check-title{font-weight:700;font-size:13px;margin-bottom:8px;}
+.check .radios{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;margin-bottom:8px;}
+.check .radios label{display:flex;align-items:center;gap:4px;}
+.check textarea{width:100%;min-height:44px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12.5px;font-family:inherit;resize:vertical;}
+.progresswrap{background:#EDF3EF;border-radius:8px;height:8px;overflow:hidden;margin:16px 0 6px;}
+.progressbar{background:var(--green);height:100%;width:0%;transition:width .25s;}
+.timerbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:14px;}
+.timer{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--green-dark);}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.msg{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:13px;display:none;}
+.msg.ok{display:block;background:#DFF3E8;color:#0B5A32;border:1px solid #BCE7CF;}
+.msg.err{display:block;background:#FBEAE8;color:#7A2E28;border:1px solid #F2C4BE;}
+.msg.warn{display:block;background:#FFF6DE;color:#7A5B00;border:1px solid #F2E2A8;}
+.editbar{display:none;background:#FFF6DE;border:1px solid #F2E2A8;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#7A5B00;}
+.filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+.filters input,.filters select{padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
+.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:8px;}
+table{border-collapse:collapse;width:100%;font-size:12.5px;white-space:nowrap;}
+th,td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:left;}
+th{background:#F1F5F2;color:var(--green-dark);position:sticky;top:0;}
+tbody tr:hover{background:#FAFCFB;}
+.badge{padding:2px 9px;border-radius:10px;font-weight:700;font-size:11.5px;}
+.badge.a{background:#DFF3E8;color:#0B7A3E;}
+.badge.b{background:#E4F0FB;color:#1D5DA8;}
+.badge.c{background:#FFF3D6;color:#8A6300;}
+.badge.d{background:#FBE1DE;color:#A6362C;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.metric .n{font-size:26px;font-weight:800;color:var(--green-dark);}
+.metric .l{font-size:12px;color:var(--muted);margin-top:3px;}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,20,15,.5);align-items:center;justify-content:center;z-index:50;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:92vw;}
+.modal h3{margin-top:0;font-size:16px;}
+.modal .field{margin-bottom:12px;}
+.toprow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px;}
+a{color:var(--green-dark);}
+
+/* ===== v2: login, roles, campos dinamicos, catalogo comercial ===== */
+.hidden-role{display:none !important;}
+#loginScreen{position:fixed;inset:0;background:linear-gradient(160deg,#07341F,#0B4A2C 60%,#00A859);display:flex;align-items:center;justify-content:center;z-index:100;}
+.login-card{background:#fff;border-radius:14px;padding:36px 34px;width:400px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.login-card h1{margin:0 0 2px;font-size:22px;color:var(--green-dark);}
+.login-card .tag{color:var(--muted);font-size:12.5px;margin-bottom:22px;}
+.login-tabs{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+.login-tabs button{flex:1;padding:10px;border:none;background:#fff;font-size:13px;font-weight:600;color:var(--muted);}
+.login-tabs button.active{background:var(--green-dark);color:#fff;}
+.login-pane{display:none;}
+.login-pane.active{display:block;}
+.login-pane .field{margin-bottom:12px;}
+.login-pane input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:13.5px;}
+.login-err{color:var(--red);font-size:12.5px;margin-top:8px;display:none;}
+.login-comercial-box{text-align:center;padding:10px 0;}
+.login-comercial-box p{color:var(--muted);font-size:12.5px;margin:10px 0 18px;}
+.linklike{background:none;border:none;color:var(--green-dark);font-size:12.5px;text-decoration:underline;padding:0;font-weight:600;}
+.userbadge{display:flex;align-items:center;gap:8px;}
+.userbadge .role{background:rgba(255,255,255,.15);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.4px;}
+
+/* select dinamico com "+ criar nova opcao" */
+.dselect-wrap{position:relative;}
+.dselect-new{display:none;gap:6px;margin-top:6px;}
+.dselect-new.show{display:flex;}
+.dselect-new input{flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
+
+/* multi-select de categorias (compacto) */
+.msel{position:relative;display:inline-block;}
+.msel-btn{border:1px solid var(--border);background:#fff;border-radius:6px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
+.msel-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:10px;z-index:30;min-width:220px;max-height:280px;overflow:auto;}
+.msel-panel.show{display:block;}
+.msel-panel label{display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:13px;cursor:pointer;}
+.msel-panel hr{border:none;border-top:1px solid var(--border);margin:6px 0;}
+.msel-actions{display:flex;justify-content:space-between;margin-top:6px;}
+
+/* catalogo comercial */
+.searchbar{display:flex;gap:10px;margin-bottom:14px;}
+.searchbar input{flex:1;padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;}
+.catalog-grid{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:start;}
+@media (max-width:820px){.catalog-grid{grid-template-columns:1fr;}}
+.filterpanel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:sticky;top:14px;}
+.filterpanel .fgroup{margin-bottom:14px;}
+.filterpanel label{font-size:11.5px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;}
+.filterpanel select,.filterpanel input{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;}
+.resultrow{cursor:pointer;}
+.resultrow:hover{background:#EFF7F2 !important;}
+
+/* modal generico */
+.modal-bg2{display:none;position:fixed;inset:0;background:rgba(10,20,15,.55);align-items:flex-start;justify-content:center;z-index:60;overflow:auto;padding:36px 16px;}
+.modal-bg2.show{display:flex;}
+.modal2{background:#fff;border-radius:12px;padding:26px 28px;width:640px;max-width:100%;}
+.modal2 h2{margin:0 0 4px;font-size:18px;color:var(--green-dark);}
+.modal2 .modal-sub{color:var(--muted);font-size:12.5px;margin-bottom:18px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:18px;}
+.detail-item .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.detail-item .v{font-size:13.5px;font-weight:600;}
+.attention-box{background:#FAFCFB;border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-top:6px;}
+.attention-item{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #EEF3F0;font-size:13px;}
+.attention-item:last-child{border-bottom:none;}
+.attention-item .obs{color:var(--muted);font-size:12px;font-style:italic;max-width:60%;text-align:right;}
+.close2{position:absolute;top:14px;right:18px;border:none;background:none;font-size:20px;color:var(--muted);cursor:pointer;}
+.modal2{position:relative;}
+
+/* admin de opcoes */
+.opt-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.opt-tabs button{border:1px solid var(--border);background:#fff;padding:6px 12px;border-radius:14px;font-size:12px;font-weight:600;color:var(--muted);}
+.opt-tabs button.active{background:var(--green-dark);color:#fff;border-color:var(--green-dark);}
+.opt-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);font-size:13px;}
+.opt-row.inactive{opacity:.45;}
+.opt-add{display:flex;gap:8px;margin-top:12px;}
+.opt-add input{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;}
+.switch{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:20px;transition:.15s;}
+.slider:before{content:"";position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.15s;}
+input:checked + .slider{background:var(--green);}
+input:checked + .slider:before{transform:translateX(16px);}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>SELB Inspector</h1>
+    <div class="tag">Inspecao e catalogo de equipamentos - Selbetti</div>
+
+    <div class="login-tabs">
+      <button id="tabLoginLab" class="active" onclick="switchLoginTab('lab')">Login Laboratorio</button>
+      <button id="tabLoginCom" onclick="switchLoginTab('com')">Acesso Comercial</button>
+    </div>
+
+    <div class="login-pane active" id="paneLab">
+      <div class="field"><input type="text" id="loginEmail" placeholder="E-mail"></div>
+      <div class="field"><input type="password" id="loginSenha" placeholder="Senha"></div>
+      <button class="btn primary" style="width:100%;" onclick="doLoginLab()">Entrar</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button class="linklike" onclick="doSignupLab()">Criar conta de laboratorio</button>
+      </div>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+
+    <div class="login-pane" id="paneCom">
+      <div class="login-comercial-box">
+        <p>Consulte o catalogo de equipamentos ja inspecionados, sem precisar de senha do laboratorio.</p>
+        <button class="btn primary" style="width:100%;" onclick="doLoginComercial()">Entrar como Comercial</button>
+      </div>
+      <div class="login-err" id="loginErrCom"></div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div>
+    <h1>SELB Inspector</h1>
+    <div class="sub">Inspecao e classificacao de equipamentos - Laboratorio Selbetti</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="pill"><span id="connDot" class="dot off"></span><span id="connLabel">Sem conexao</span></span>
+    <span class="userbadge pill" id="userBadge" style="display:none;">
+      <span id="userEmail"></span><span class="role" id="userRole"></span>
+    </span>
+    <button class="btn ghost lab-only" onclick="openConfig()">Configuracoes</button>
+    <button class="btn ghost" onclick="doLogout()">Sair</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tabbtn lab-only" data-tab="nova" onclick="showTab('nova')">Nova analise</button>
+  <button class="tabbtn lab-only" data-tab="historico" onclick="showTab('historico')">Historico</button>
+  <button class="tabbtn" data-tab="catalogo" onclick="showTab('catalogo')">Equipamentos categorizados</button>
+  <button class="tabbtn lab-only" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
+  <button class="tabbtn lab-only" data-tab="importar" onclick="showTab('importar')">Importar historico antigo</button>
+  <button class="tabbtn lab-only" data-tab="opcoes" onclick="showTab('opcoes')">Opcoes cadastradas</button>
+</nav>
+
+<main>
+
+<!-- ===================== NOVA ANALISE ===================== -->
+<div class="view active" id="view-nova">
+
+  <div class="profile-tabs" id="profileTabs"></div>
+
+  <div class="editbar" id="editMode">Editando um registro existente. O tempo original desta analise sera preservado.</div>
+
+  <div class="card">
+    <div class="card-title">Dados do equipamento</div>
+    <div class="grid" id="formGrid"></div>
+
+    <div class="section" id="section_funcionamento">Funcionamento</div>
+    <div class="grid" id="funcGrid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
+      <div class="field" id="field_funcionamentoGeral">
+        <label>Funcionamento geral</label>
+        <div class="radiorow">
+          <label><input type="radio" name="funcionamento" value="Total"> Total</label>
+          <label><input type="radio" name="funcionamento" value="Parcial"> Parcial</label>
+        </div>
+      </div>
+      <div class="field" id="field_usbFuncionamento">
+        <label>USB funcionamento</label>
+        <div class="radiorow">
+          <label><input type="radio" name="usbFuncionamento" value="Total"> Total</label>
+          <label><input type="radio" name="usbFuncionamento" value="Parcial"> Parcial</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Checklist de inspecao</div>
+    <div class="checklist-grid" id="checklistArea"></div>
+    <div class="progresswrap"><div class="progressbar" id="progressBar"></div></div>
+    <div class="hint" id="progressLabel">0 de 0 itens preenchidos</div>
+
+    <div class="timerbar">
+      <div>
+        <div class="timer" id="timer">00:00:00</div>
+        <div class="actions" style="margin-top:8px;">
+          <button class="btn primary" id="startBtn" onclick="startAnalysis()">Iniciar analise</button>
+          <button class="btn" id="finishBtn" style="display:none;" onclick="finishAnalysis()">Finalizar e salvar</button>
+          <button class="btn primary" id="saveEditBtn" style="display:none;" onclick="saveEditedRecord()">Salvar alteracoes</button>
+          <button class="btn" id="cancelEditBtn" style="display:none;" onclick="cancelEdit()">Cancelar edicao</button>
+        </div>
+      </div>
+      <div id="resultBox" style="text-align:right;"></div>
+    </div>
+    <div class="msg" id="formMsg"></div>
+  </div>
+
+</div>
+
+<!-- ===================== HISTORICO ===================== -->
+<div class="view" id="view-historico">
+  <div class="card">
+    <div class="toprow">
+      <div class="card-title" style="margin:0;">Historico de inspecoes</div>
+      <div class="actions">
+        <span class="hint">Exportar por perfil (detalhado):</span>
+        <select id="exportProfile" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;"></select>
+        <button class="btn" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn primary" onclick="exportXLSX()">Exportar XLSX</button>
+      </div>
+    </div>
+    <div class="toprow">
+      <span class="hint">Exportar por categorias (resumido, respeita os filtros abaixo):</span>
+      <div class="actions">
+        <span class="msel" id="mselHistExport"></span>
+        <button class="btn primary" onclick="exportUnifiedXLSX(filtered(), 'historico_categorias')">Exportar XLSX (categorias)</button>
+      </div>
+    </div>
+    <div class="filters">
+      <input type="text" id="search" placeholder="Busca geral" onkeyup="renderHistory()">
+      <input type="text" id="brandFilter" placeholder="Marca" onkeyup="renderHistory()">
+      <select id="gradeFilter" onchange="renderHistory()">
+        <option value="">Nota - todas</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+      </select>
+      <select id="funcFilter" onchange="renderHistory()">
+        <option value="">Funcionamento - todos</option><option value="Total">Total</option><option value="Parcial">Parcial</option>
+      </select>
+      <input type="text" id="dateFrom" placeholder="Data inicial AAAA-MM-DD" onkeyup="renderHistory()">
+      <input type="text" id="dateTo" placeholder="Data final AAAA-MM-DD" onkeyup="renderHistory()">
+      <button class="btn" onclick="clearFilters()">Limpar filtros</button>
+    </div>
+    <div class="hint" id="historyCount" style="margin-bottom:10px;"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Acoes</th><th>Identificacao</th><th>Padrao de cadastro</th><th>Data</th><th>SELB</th><th>SKU</th>
+          <th>Tipo</th><th>Marca</th><th>Modelo</th><th>CPU</th><th>Memoria</th><th>Armaz.</th>
+          <th>Sistema</th><th>Func.</th><th>USB</th><th>Media</th><th>Nota</th><th>Duracao</th>
+        </tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div class="view" id="view-dashboard">
+  <div class="metrics">
+    <div class="metric"><div class="n" id="mTotal">0</div><div class="l">Inspecoes registradas</div></div>
+    <div class="metric"><div class="n" id="mAvg">00:00:00</div><div class="l">Tempo medio por inspecao</div></div>
+    <div class="metric"><div class="n" id="mBest">00:00:00</div><div class="l">Inspecao mais rapida</div></div>
+    <div class="metric"><div class="n" id="mWorst">00:00:00</div><div class="l">Inspecao mais demorada</div></div>
+    <div class="metric"><div class="n" id="mPartial">0</div><div class="l">Funcionamento parcial</div></div>
+    <div class="metric"><div class="n" id="mQuality">0</div><div class="l">Qualidade media (A=5..D=2)</div></div>
+    <div class="metric"><div class="n" id="countA">0</div><div class="l">Nota A</div></div>
+    <div class="metric"><div class="n" id="countB">0</div><div class="l">Nota B</div></div>
+    <div class="metric"><div class="n" id="countC">0</div><div class="l">Nota C</div></div>
+    <div class="metric"><div class="n" id="countD">0</div><div class="l">Nota D</div></div>
+  </div>
+</div>
+
+<!-- ===================== IMPORTAR ===================== -->
+<div class="view" id="view-importar">
+  <div class="card">
+    <div class="card-title">Importar historico do sistema antigo</div>
+    <p class="hint">Selecione o arquivo <code>dados/inspecoes.json</code> exportado do SELB Inspector Pro (HTA). Os registros sao inseridos no banco preservando o ID, a media e a nota geral originais (nao sao recalculados) - exatamente como o sistema antigo faz ao carregar historico existente. Registros com o mesmo ID sao atualizados, nao duplicados.</p>
+    <input type="file" id="importFile" accept=".json" onchange="handleImportFile(event)">
+    <div id="importPreview" class="hint" style="margin-top:10px;"></div>
+    <button class="btn primary" id="importBtn" style="margin-top:12px;display:none;" onclick="runImport()">Importar para o banco</button>
+    <div class="msg" id="importMsg"></div>
+  </div>
+</div>
+
+<!-- ===================== CATALOGO / COMERCIAL ===================== -->
+<div class="view" id="view-catalogo">
+  <div class="searchbar">
+    <input type="text" id="catSearch" placeholder="Busca geral: SELB, SKU, marca, modelo, processador, tela, sistema..." onkeyup="renderCatalog()">
+    <button class="btn primary" onclick="exportCatalogXLSX()">Exportar XLSX (filtro atual)</button>
+  </div>
+  <div class="catalog-grid">
+    <div class="filterpanel">
+      <div class="fgroup"><label>Categoria</label><span class="msel" id="mselCategoria" style="display:block;"></span></div>
+      <div class="fgroup"><label>Nota geral</label>
+        <select id="catNota" onchange="renderCatalog()"><option value="">Todas</option><option value="A">A - Excelente</option><option value="B">B - Bom</option><option value="C">C - Regular</option><option value="D">D - Ruim</option></select>
+      </div>
+      <div class="fgroup"><label>SELB</label><input type="text" id="catSelb" onkeyup="renderCatalog()"></div>
+      <div class="fgroup"><label>Marca</label><select id="catMarca" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Modelo</label><input type="text" id="catModelo" onkeyup="renderCatalog()"></div>
+      <div class="fgroup"><label>Processador</label><select id="catProcessador" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Geracao</label><select id="catGeracao" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Memoria</label><select id="catMemoria" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Armazenamento</label><select id="catArmazenamento" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Tipo armazenamento</label><select id="catTipoArm" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Placa de video</label><select id="catPlacaVideo" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Tela</label><select id="catTela" onchange="renderCatalog()"></select></div>
+      <div class="fgroup"><label>Sistema operacional</label><select id="catSistema" onchange="renderCatalog()"></select></div>
+      <button class="btn sm" style="width:100%;" onclick="clearCatalogFilters()">Limpar filtros</button>
+    </div>
+    <div>
+      <div class="metrics" id="catMetrics" style="margin-bottom:16px;"></div>
+      <div class="hint" id="catCount" style="margin-bottom:8px;"></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th>SELB</th><th>Categoria</th><th>Marca</th><th>Modelo</th><th>Processador</th>
+            <th>Geracao</th><th>Memoria</th><th>Armazenamento</th><th>Tela</th><th>Sistema</th><th>Nota</th>
+          </tr></thead>
+          <tbody id="catalogBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ADMIN DE OPCOES ===================== -->
+<div class="view" id="view-opcoes">
+  <div class="card">
+    <div class="card-title">Opcoes cadastradas</div>
+    <p class="hint">Essas listas alimentam os campos de selecao do formulario. Desativar uma opcao a esconde dos novos cadastros, mas os equipamentos que ja usam ela continuam normalmente (nada e apagado).</p>
+    <div class="opt-tabs" id="optTabs"></div>
+    <div id="optList"></div>
+    <div class="opt-add">
+      <input type="text" id="optNewValue" placeholder="Nova opcao...">
+      <button class="btn primary" onclick="adminAddOption()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>SELB Inspector - dados armazenados no Supabase do laboratorio.</footer>
+
+<!-- ===================== MODAL DETALHES DO EQUIPAMENTO ===================== -->
+<div class="modal-bg2" id="detailModal">
+  <div class="modal2">
+    <button class="close2" onclick="closeDetail()">&times;</button>
+    <h2 id="detTitle">Equipamento</h2>
+    <div class="modal-sub" id="detSub"></div>
+    <div class="detail-grid" id="detGrid"></div>
+    <div class="card-title" style="margin-bottom:8px;">Resultado da inspecao</div>
+    <div id="detResult" style="margin-bottom:12px;"></div>
+    <div class="card-title" style="margin-bottom:8px;">Pontos de atencao</div>
+    <div class="attention-box" id="detAttention"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL CONFIG ===================== -->
+<div class="modal-bg" id="configModal">
+  <div class="modal">
+    <h3>Conexao com o banco (Supabase)</h3>
+    <div class="field"><label>Project URL</label><input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div class="field"><label>Anon public key</label><input type="text" id="cfgKey" placeholder="eyJhbGciOi..."></div>
+    <div class="hint">Essas informacoes ficam salvas apenas neste navegador (localStorage). Encontre-as em Supabase &gt; Project Settings &gt; API.</div>
+    <div class="actions" style="margin-top:16px;justify-content:flex-end;">
+      <button class="btn" onclick="closeConfig()">Cancelar</button>
+      <button class="btn primary" onclick="saveConfig()">Salvar e conectar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   NUCLEO DE NEGOCIO - identico ao SELB Inspector Pro v20 (HTA original)
+   ===================================================================== */
+const score = { A: 5, B: 4, C: 3, D: 2 };
+
+const checklistProfiles = {
+  notebook: { label: "Notebook", type: "NOTEBOOK", items: ["teclado","camera","portasUsb","portaRedeNotebook","tela","tampaCima","tampaBaixo","palmRest","bateria","hdmiUsbCCheck"] },
+  desktop:  { label: "Desktop",  type: "DESKTOP",  items: ["gabinete","placaMae","portasUsb","videoSaida","redeLan","fontePsu","armazenamentoCheck","limpezaInterna"] },
+  mobile:   { label: "Celular/Tablet", type: "CELULAR/TABLET", items: ["telaTouch","camera","altoFalanteMic","botoes","bateria","wifiBluetooth","carregamento","biometria"] },
+  coletor:  { label: "Coletor",  type: "COLETOR",  items: ["leitorCodigo","telaTouch","botoesGatilho","bateria","carregamentoDock","wifiBluetooth","sistemaColetor","estruturaColetor"] },
+  monitor:  { label: "Monitor",  type: "MONITOR",  items: ["telaMonitor","funcionamentoMonitor","hdmiMonitor","displayPortMonitor","vgaMonitor","usbCMonitor","usbMonitor","baseMonitor","carcacaMonitor"] }
+};
+const profileOrder = ["notebook","desktop","mobile","coletor","monitor"];
+
+const checkItemLabels = {
+  teclado:"Teclado", camera:"Camera", portasUsb:"Portas USB", portaRedeNotebook:"Porta de rede (RJ45)",
+  tela:"Tela", tampaCima:"Tampa de cima", tampaBaixo:"Tampa de baixo", palmRest:"Palm Rest", bateria:"Bateria",
+  hdmiUsbCCheck:"HDMI / USB-C", gabinete:"Gabinete", placaMae:"Placa mae", videoSaida:"Saida de video",
+  redeLan:"Rede LAN", fontePsu:"Fonte / PSU", armazenamentoCheck:"Armazenamento", limpezaInterna:"Limpeza interna",
+  telaTouch:"Tela / touch", altoFalanteMic:"Alto-falante / microfone", botoes:"Botoes", wifiBluetooth:"Wi-Fi / Bluetooth",
+  carregamento:"Carregamento", biometria:"Biometria / Face ID", leitorCodigo:"Leitor de codigo",
+  botoesGatilho:"Botoes / gatilho", carregamentoDock:"Carregamento / dock", sistemaColetor:"Sistema do coletor",
+  estruturaColetor:"Estrutura", telaMonitor:"Tela", funcionamentoMonitor:"Funcionamento geral",
+  hdmiMonitor:"Entrada HDMI", displayPortMonitor:"Entrada DisplayPort", vgaMonitor:"Entrada VGA",
+  usbCMonitor:"Entrada USB-C", usbMonitor:"Portas USB - funcionamento", baseMonitor:"Base / suporte", carcacaMonitor:"Carcaca"
+};
+
+const techFields = [
+  {id:"selb", label:"SELB", required:true, placeholder:"Ex.: SELB12345"},
+  {id:"sku", label:"SKU", placeholder:"Codigo interno"},
+  {id:"tipoEquipamento", label:"Tipo de equipamento", type:"select", options:[["","Selecione"],["DESKTOP","Desktop"],["MONITOR","Monitor"],["NOTEBOOK","Notebook"],["CELULAR/TABLET","Celular/Tablet"],["COLETOR","Coletor"]]},
+  {id:"categoria", label:"Categoria", type:"dselect", tipoCampo:"categoria"},
+  {id:"desktopFormato", label:"Formato desktop", type:"select", options:[["","Selecione"],["MICRO","Micro"],["SLIM","Slim"],["FULL TOWER","Full tower"]]},
+  {id:"marca", label:"Marca", type:"dselect", tipoCampo:"marca"},
+  {id:"modelo", label:"Modelo", placeholder:"Ex.: PROBOOK 4"},
+  {id:"processador", label:"Processador", type:"dselect", tipoCampo:"processador"},
+  {id:"geracao", label:"Geracao do processador", type:"dselect", tipoCampo:"geracao"},
+  {id:"memoria", label:"Memoria", type:"dselect", tipoCampo:"memoria"},
+  {id:"armazenamento", label:"Armazenamento", type:"dselect", tipoCampo:"armazenamento"},
+  {id:"tipoArmazenamento", label:"Tipo armazenamento", type:"dselect", tipoCampo:"tipo_armazenamento"},
+  {id:"placaVideo", label:"Placa de video", type:"dselect", tipoCampo:"placa_video"},
+  {id:"telaInfo", label:"Tela - especificacao", type:"dselect", tipoCampo:"tela"},
+  {id:"sistema", label:"Sistema operacional", type:"dselect", tipoCampo:"sistema_operacional"},
+  {id:"sistemaEdicao", label:"Edicao do sistema", type:"select", options:[["","Selecione"],["PRO","Pro"],["HOME","Home"]]},
+  {id:"fonte", label:"Fonte / carregador", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
+  {id:"monitorUsbPossui", label:"Portas USB - possui", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]], onchange:"updateMonitorUsbState"},
+  {id:"cameraTeste", label:"Camera testada", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
+  {id:"hdmiUsbC", label:"HDMI / USB-C testado", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
+  {id:"bateriaStatus", label:"Bateria", type:"select", options:[["","Selecione"],["BOA","Boa"],["FRACA","Fraca"],["NAO SE APLICA","Nao se aplica"]]}
+];
+const DYNAMIC_TIPOS = ["categoria","marca","processador","geracao","memoria","armazenamento","tipo_armazenamento","placa_video","tela","sistema_operacional"];
+const profileDefaultCategoria = {notebook:"Notebook", desktop:"Desktop", mobile:"Celular", coletor:"Coletor", monitor:"Monitor"};
+
+function fieldVisible(id, p){
+  const isDesktop=p=="desktop", isNotebook=p=="notebook", isMobile=p=="mobile", isColetor=p=="coletor", isMonitor=p=="monitor";
+  switch(id){
+    case "categoria": return true;
+    case "desktopFormato": return isDesktop;
+    case "processador": return !isMonitor;
+    case "geracao": return !isMonitor;
+    case "memoria": return isNotebook||isDesktop;
+    case "armazenamento": return !isMonitor;
+    case "tipoArmazenamento": return isNotebook||isDesktop;
+    case "placaVideo": return isNotebook||isDesktop;
+    case "telaInfo": return isNotebook||isMobile||isColetor||isMonitor;
+    case "sistema": return !isMonitor;
+    case "sistemaEdicao": return isNotebook||isDesktop;
+    case "fonte": return true;
+    case "cameraTeste": return isNotebook||isMobile;
+    case "hdmiUsbC": return isNotebook||isDesktop;
+    case "bateriaStatus": return isNotebook||isMobile||isColetor;
+    case "monitorUsbPossui": return isMonitor;
+    default: return true;
+  }
+}
+
+const allItemKeys = Object.keys(checkItemLabels);
+const techKeys = ["perfilChecklist","selb","sku","tipoEquipamento","tipoCodigo","desktopFormato","marca","modelo","processador","geracao","memoria","armazenamento","tipoArmazenamento","placaVideo","telaInfo","sistema","sistemaEdicao","fonte","cameraTeste","hdmiUsbC","bateriaStatus","monitorUsbPossui"];
+
+const weights = { teclado:1.15,camera:0.90,portasUsb:1.20,portaRedeNotebook:1.0,tela:1.25,tampaCima:1.35,tampaBaixo:0.70,palmRest:1.20,bateria:1.15,hdmiUsbCCheck:1.0,gabinete:1.10,placaMae:1.30,videoSaida:1.15,redeLan:1.0,fontePsu:1.25,armazenamentoCheck:1.15,limpezaInterna:0.90,telaTouch:1.35,altoFalanteMic:1.0,botoes:0.95,wifiBluetooth:1.0,carregamento:1.15,biometria:0.85,leitorCodigo:1.35,botoesGatilho:1.10,carregamentoDock:1.15,sistemaColetor:1.0,estruturaColetor:1.10,telaMonitor:1.40,funcionamentoMonitor:1.40,hdmiMonitor:1.10,displayPortMonitor:1.10,vgaMonitor:1.0,usbCMonitor:1.10,usbMonitor:1.0,baseMonitor:1.10,carcacaMonitor:1.20 };
+
+function trim(s){ return String(s||"").replace(/^\s+|\s+$/g,""); }
+function cleanProductPart(v){ return trim(v).replace(/\s+/g," "); }
+
+function profileFromType(v){
+  v = String(v||"").toUpperCase();
+  if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION") return "desktop";
+  if (v==="MONITOR") return "monitor";
+  if (v==="CELULAR/TABLET"||v==="CELULAR"||v==="TABLET") return "mobile";
+  if (v==="COLETOR") return "coletor";
+  return "notebook";
+}
+function equipmentTypeCode(v){
+  v = String(v||"").toUpperCase();
+  if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION") return "1";
+  if (v==="MONITOR") return "2";
+  if (v==="NOTEBOOK") return "3";
+  return "";
+}
+function profileFromRecord(r){
+  if (r && r.perfilChecklist && checklistProfiles[r.perfilChecklist]) return r.perfilChecklist;
+  return profileFromType(r ? r.tipoEquipamento : "");
+}
+function equipmentDescription(r){
+  const p = profileFromRecord(r), fmt = cleanProductPart(r.desktopFormato), type = cleanProductPart(r.tipoEquipamento);
+  if (p==="desktop") return cleanProductPart("DESKTOP "+fmt);
+  if (p==="monitor") return "MONITOR";
+  if (p==="mobile") return "CELULAR/TABLET";
+  if (p==="coletor") return "COLETOR";
+  if (type) return type;
+  return "NOTEBOOK";
+}
+function storagePattern(r){
+  let cap = cleanProductPart(r.armazenamento); const type = cleanProductPart(r.tipoArmazenamento); const u = cap.toUpperCase();
+  if (type && u.indexOf(type.toUpperCase())<0) cap = cleanProductPart(cap+" "+type);
+  return cap;
+}
+function systemPattern(r){
+  let os = cleanProductPart(r.sistema); const edition = cleanProductPart(r.sistemaEdicao); const u = os.toUpperCase();
+  if (edition && u.indexOf(edition.toUpperCase())<0) os = cleanProductPart(os+" "+edition);
+  return os;
+}
+function processorPattern(r){
+  let cpu = cleanProductPart(r.processador); const gen = cleanProductPart(r.geracao); const u = cpu.toUpperCase();
+  if (cpu && gen && u.indexOf(gen.toUpperCase())<0) cpu = cleanProductPart(cpu+" "+gen);
+  return cpu || gen;
+}
+function productIdentifier(r){
+  const id = cleanProductPart(r.selb), sku = cleanProductPart(r.sku), type = equipmentDescription(r), parts=[type,"SELB: "+(id||"NAO INFORMADO")];
+  if (sku) parts.push("SKU: "+sku);
+  return parts.join(" | ");
+}
+function productPattern(r){
+  const type = equipmentDescription(r), prefix = [type,"SELB","ITD","HW"];
+  const p = profileFromRecord(r);
+  const config = [cleanProductPart(r.marca), cleanProductPart(r.modelo)];
+  if (p==="monitor") {
+    config.push(cleanProductPart(r.telaInfo));
+  } else {
+    config.push(processorPattern(r));
+    if (p==="notebook"||p==="desktop") config.push(cleanProductPart(r.memoria));
+    config.push(storagePattern(r));
+    config.push(systemPattern(r));
+    if (p!=="desktop") config.push(cleanProductPart(r.telaInfo));
+  }
+  const out = config.filter(Boolean);
+  return prefix.join(" - ") + (out.length ? " - "+out.join(" ") : "");
+}
+function gradeRank(g){ if(g==="A")return 4; if(g==="B")return 3; if(g==="C")return 2; return 1; }
+function capGrade(grade,limit){ if(!limit) return grade; return gradeRank(grade)>gradeRank(limit) ? limit : grade; }
+function monitorHasNoUsb(d){
+  if (!d) return false;
+  return profileFromRecord(d)==="monitor" && String(d.monitorUsbPossui||"").toUpperCase()==="NAO";
+}
+function checklistLimitGrade(d){
+  if (!d) return "";
+  const p = profileFromRecord(d);
+  const items = (checklistProfiles[p]||checklistProfiles.notebook).items;
+  for (let i=0;i<items.length;i++){
+    const k = items[i];
+    if (k==="usbMonitor" && monitorHasNoUsb(d)) continue;
+    if (d[k]==="D") return "D";
+  }
+  return "";
+}
+function qualityGrade(avg,d){
+  avg = Number(String(avg||"0").replace(",",".")) || 0;
+  let grade;
+  if (avg>=4.50) grade="A"; else if (avg>=4.00) grade="B"; else if (avg>=3.00) grade="C"; else grade="D";
+  return capGrade(grade, checklistLimitGrade(d));
+}
+function resultQuality(r){ return qualityGrade(r ? r.media : 0, r); }
+function calc(d, itemKeys){
+  let total=0, totalWeight=0;
+  for (let i=0;i<itemKeys.length;i++){
+    const k = itemKeys[i];
+    if ((k==="usbMonitor" && monitorHasNoUsb(d)) || d[k]==="NA") continue;
+    total += (score[d[k]]||0) * weights[k];
+    totalWeight += weights[k];
+  }
+  const avg = totalWeight ? total/totalWeight : 0;
+  return { avg: Math.round(avg*100)/100, grade: qualityGrade(avg,d) };
+}
+function validExportProfile(profile){ return checklistProfiles[profile] ? profile : "notebook"; }
+function exportChecklistKeys(profile){ return checklistProfiles[validExportProfile(profile)].items.slice(0); }
+function exportBaseColumns(profile){
+  profile = validExportProfile(profile);
+  const isNotebook=profile==="notebook", isDesktop=profile==="desktop", isMobile=profile==="mobile", isMonitor=profile==="monitor";
+  const cols = [
+    ["RESULTADO - Media", r=>r.media],
+    ["RESULTADO - Qualidade geral", r=>resultQuality(r)],
+    ["PRODUTO - Padrao de cadastro", r=>productPattern(r)],
+    ["IDENTIFICACAO - Data", r=>r.data],
+    ["IDENTIFICACAO - SELB", r=>r.selb],
+    ["IDENTIFICACAO - SKU", r=>r.sku],
+    ["IDENTIFICACAO - Tipo final", r=>equipmentDescription(r)],
+    ["IDENTIFICACAO - Marca", r=>r.marca],
+    ["IDENTIFICACAO - Modelo", r=>r.modelo]
+  ];
+  if (isMonitor){
+    cols.push(["MONITOR - Tela / especificacao", r=>r.telaInfo]);
+    cols.push(["MONITOR - Portas USB", r=>r.monitorUsbPossui]);
+    cols.push(["ENERGIA - Fonte", r=>r.fonte]);
+    return cols;
+  }
+  cols.push(["HARDWARE - Processador + Geracao", r=>processorPattern(r)]);
+  cols.push(["HARDWARE - Geracao", r=>r.geracao]);
+  if (isNotebook||isDesktop) cols.push(["HARDWARE - Memoria", r=>r.memoria]);
+  cols.push(["HARDWARE - Armazenamento", r=>r.armazenamento]);
+  if (isNotebook||isDesktop){
+    cols.push(["HARDWARE - Tipo armazenamento", r=>r.tipoArmazenamento]);
+    cols.push(["HARDWARE - Placa de video", r=>r.placaVideo]);
+  }
+  if (!isDesktop) cols.push(["HARDWARE - Tela / especificacao", r=>r.telaInfo]);
+  cols.push(["HARDWARE - Sistema operacional", r=>r.sistema]);
+  if (isNotebook||isDesktop) cols.push(["HARDWARE - Edicao do sistema", r=>r.sistemaEdicao]);
+  cols.push(["ENERGIA - Fonte", r=>r.fonte]);
+  cols.push(["FUNCIONAMENTO - Geral", r=>r.funcionamento]);
+  if (isNotebook||isDesktop) cols.push(["FUNCIONAMENTO - USB", r=>r.usbFuncionamento]);
+  if (isNotebook||isMobile) cols.push(["TESTES EXTRAS - Camera testada", r=>r.cameraTeste]);
+  if (isNotebook||isDesktop) cols.push(["TESTES EXTRAS - HDMI / USB-C", r=>r.hdmiUsbC]);
+  if (!isDesktop) cols.push(["TESTES EXTRAS - Bateria", r=>r.bateriaStatus]);
+  return cols;
+}
+function exportHeadersList(profile){
+  const cols = exportBaseColumns(profile), keys = exportChecklistKeys(profile), h = cols.map(c=>c[0]);
+  keys.forEach(k=>{ h.push("CHECKLIST - "+(checkItemLabels[k]||k)+" - Nota"); h.push("CHECKLIST - "+(checkItemLabels[k]||k)+" - Motivo / observacao"); });
+  h.push("TEMPO - Horario de inicio","TEMPO - Horario de fim","TEMPO - Duracao (hh:mm:ss)","TEMPO - Duracao em segundos");
+  return h;
+}
+function fmtDuration(sec){
+  sec = Math.floor(Math.max(0, Number(sec)||0));
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  const pad=n=>n<10?"0"+n:""+n;
+  return pad(h)+":"+pad(m)+":"+pad(s);
+}
+function exportRow(r, profile){
+  const cols = exportBaseColumns(profile), keys = exportChecklistKeys(profile), row = cols.map(c=>c[1](r));
+  keys.forEach(k=>{ row.push(r[k]||""); row.push(r[k+"Obs"]||""); });
+  row.push(r.horarioInicio||"", r.horarioFim||"", fmtDuration(r.tempoSegundos), r.tempoSegundos||0);
+  return row;
+}
+
+/* =====================================================================
+   ESTADO DA APLICACAO / SUPABASE / AUTH
+   ===================================================================== */
+var supa = null;
+var allHistory = [];
+var activeProfile = "notebook";
+var exportProfileSel = "notebook";
+var editId = null;
+var startTime = null, timerInterval = null, elapsedBeforePause = 0;
+var currentUser = null, currentRole = null;
+var opcoesCache = {};
+
+function E(id){ return document.getElementById(id); }
+
+function getConfig(){
+  try{ return JSON.parse(localStorage.getItem("selbInspectorConfig")||"{}"); }catch(e){ return {}; }
+}
+function openConfig(){
+  const c = getConfig();
+  E("cfgUrl").value = c.url || "";
+  E("cfgKey").value = c.key || "";
+  E("configModal").classList.add("show");
+}
+function closeConfig(){ E("configModal").classList.remove("show"); }
+function saveConfig(){
+  const url = trim(E("cfgUrl").value), key = trim(E("cfgKey").value);
+  if(!url || !key){ alert("Preencha URL e chave."); return; }
+  localStorage.setItem("selbInspectorConfig", JSON.stringify({url,key}));
+  closeConfig();
+  initSupabase();
+}
+function initSupabase(){
+  const c = getConfig();
+  if(!c.url || !c.key){ setConn(false); openConfig(); return; }
+  supa = window.supabase.createClient(c.url, c.key);
+  setConn(true);
+  supa.auth.onAuthStateChange((event, session)=>{
+    if(session && session.user) onAuthReady(session.user);
+    else showLoginScreen();
+  });
+}
+function setConn(ok){
+  E("connDot").className = "dot "+(ok?"on":"off");
+  E("connLabel").innerText = ok ? "Conectado" : "Sem conexao";
+}
+
+/* ---------- LOGIN / ROLES ---------- */
+function switchLoginTab(which){
+  E("tabLoginLab").classList.toggle("active", which==="lab");
+  E("tabLoginCom").classList.toggle("active", which==="com");
+  E("paneLab").classList.toggle("active", which==="lab");
+  E("paneCom").classList.toggle("active", which==="com");
+}
+function showLoginScreen(){
+  currentUser = null; currentRole = null;
+  E("loginScreen").style.display = "flex";
+  E("userBadge").style.display = "none";
+}
+async function doLoginLab(){
+  const email = trim(E("loginEmail").value), senha = E("loginSenha").value;
+  const err = E("loginErr"); err.style.display="none";
+  if(!email || !senha){ err.innerText="Preencha e-mail e senha."; err.style.display="block"; return; }
+  const { error } = await supa.auth.signInWithPassword({ email, password: senha });
+  if(error){ err.innerText = "Nao foi possivel entrar: "+error.message; err.style.display="block"; }
+}
+async function doSignupLab(){
+  const email = trim(E("loginEmail").value), senha = E("loginSenha").value;
+  const err = E("loginErr"); err.style.display="none";
+  if(!email || !senha){ err.innerText="Preencha e-mail e senha para criar a conta."; err.style.display="block"; return; }
+  if(senha.length < 6){ err.innerText="A senha precisa ter pelo menos 6 caracteres."; err.style.display="block"; return; }
+  const { error } = await supa.auth.signUp({ email, password: senha });
+  if(error){ err.innerText = "Nao foi possivel criar a conta: "+error.message; err.style.display="block"; return; }
+  err.style.color = "#0B7A3E";
+  err.innerText = "Conta criada. Se a confirmacao por e-mail estiver ativa no projeto, confirme antes de entrar.";
+  err.style.display="block";
+}
+async function doLoginComercial(){
+  const err = E("loginErrCom"); err.style.display="none";
+  const { error } = await supa.auth.signInAnonymously();
+  if(error){ err.innerText = "Acesso comercial indisponivel: "+error.message+" (habilite 'Anonymous Sign-ins' no Supabase Auth)."; err.style.display="block"; }
+}
+async function doLogout(){
+  await supa.auth.signOut();
+}
+async function onAuthReady(user){
+  currentUser = user;
+  const { data, error } = await supa.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  currentRole = data ? data.role : (user.is_anonymous ? "COMERCIAL" : "LABORATORIO");
+  E("loginScreen").style.display = "none";
+  E("userBadge").style.display = "flex";
+  E("userEmail").innerText = user.is_anonymous ? "Comercial" : (user.email||"");
+  E("userRole").innerText = currentRole;
+  applyRoleUI();
+  await loadOpcoesAll();
+  await loadHistory();
+  subscribeRealtime();
+  subscribeOpcoesRealtime();
+  showTab(currentRole==="COMERCIAL" ? "catalogo" : "nova");
+}
+function isLabRole(){ return currentRole==="LABORATORIO" || currentRole==="ADMIN"; }
+function requireLabRole(){
+  if(!isLabRole()){ alert("Essa acao esta disponivel apenas para o Laboratorio."); return false; }
+  return true;
+}
+function applyRoleUI(){
+  document.querySelectorAll(".lab-only").forEach(el=> el.classList.toggle("hidden-role", !isLabRole()));
+  document.querySelectorAll(".admin-only").forEach(el=> el.classList.toggle("hidden-role", currentRole!=="ADMIN"));
+}
+
+async function loadHistory(){
+  if(!supa) return;
+  const { data, error } = await supa.from("inspecoes").select("payload").eq("deleted", false).order("updated_at_ms", {ascending:false});
+  if(error){ console.error(error); return; }
+  allHistory = (data||[]).map(row=>row.payload);
+  renderHistory();
+  renderDashboard();
+  renderCatalog();
+}
+function subscribeRealtime(){
+  if(!supa) return;
+  supa.channel("inspecoes-changes")
+    .on("postgres_changes", {event:"*", schema:"public", table:"inspecoes"}, ()=>{ loadHistory(); })
+    .subscribe();
+}
+
+/* ---------- CATALOGO DINAMICO DE OPCOES ---------- */
+async function loadOpcoes(tipoCampo){
+  if(!supa) return;
+  const { data, error } = await supa.from("opcoes").select("*").eq("tipo_campo", tipoCampo).order("valor");
+  if(error){ console.error(error); return; }
+  opcoesCache[tipoCampo] = data || [];
+}
+async function loadOpcoesAll(){
+  await Promise.all(DYNAMIC_TIPOS.map(t=>loadOpcoes(t)));
+  refreshAllDSelects();
+  refreshFilterSelects();
+  buildCategoriaMultiSelects();
+  const catSel = E("categoria");
+  if(catSel && !catSel.dataset.touched) catSel.value = profileDefaultCategoria[activeProfile] || "";
+}
+function subscribeOpcoesRealtime(){
+  if(!supa) return;
+  supa.channel("opcoes-changes")
+    .on("postgres_changes", {event:"*", schema:"public", table:"opcoes"}, ()=>{ loadOpcoesAll(); if(E("view-opcoes").classList.contains("active")) renderAdminOptions(); })
+    .subscribe();
+}
+async function upsertRecord(r){
+  const row = {
+    id: r.id, selb: r.selb||null, sku: r.sku||null, perfil_checklist: profileFromRecord(r),
+    tipo_equipamento: r.tipoEquipamento||null, data_iso: r.dataISO||null,
+    qualidade_geral: resultQuality(r), created_at_ms: r.createdAtMs||r.updatedAtMs||Date.now(),
+    updated_at_ms: r.updatedAtMs||Date.now(), deleted:false, payload: r
+  };
+  const { error } = await supa.from("inspecoes").upsert(row, {onConflict:"id"});
+  if(error){ msgBox("formMsg","Erro ao salvar no banco: "+error.message,"err"); return false; }
+  return true;
+}
+async function softDelete(id){
+  const { error } = await supa.from("inspecoes").update({deleted:true, updated_at_ms:Date.now()}).eq("id", id);
+  if(error){ alert("Erro ao excluir: "+error.message); return false; }
+  return true;
+}
+
+/* =====================================================================
+   TABS
+   ===================================================================== */
+function showTab(tab){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
+  E("view-"+tab).classList.add("active");
+  document.querySelector('.tabbtn[data-tab="'+tab+'"]').classList.add("active");
+  if(tab==="catalogo") renderCatalog();
+  if(tab==="opcoes"){ buildOptTabs(); renderAdminOptions(); }
+}
+
+/* =====================================================================
+   FORMULARIO / PERFIL
+   ===================================================================== */
+function buildProfileTabs(){
+  const wrap = E("profileTabs"); wrap.innerHTML = "";
+  profileOrder.forEach(p=>{
+    const b = document.createElement("button");
+    b.innerText = checklistProfiles[p].label;
+    b.className = p===activeProfile ? "active" : "";
+    b.onclick = ()=>setProfile(p);
+    wrap.appendChild(b);
+  });
+  const sel = E("exportProfile"); sel.innerHTML="";
+  profileOrder.forEach(p=>{
+    const o = document.createElement("option"); o.value=p; o.innerText=checklistProfiles[p].label;
+    sel.appendChild(o);
+  });
+  sel.value = exportProfileSel;
+  sel.onchange = ()=>{ exportProfileSel = sel.value; };
+}
+function buildFormGrid(){
+  const grid = E("formGrid"); grid.innerHTML = "";
+  techFields.forEach(f=>{
+    const div = document.createElement("div");
+    div.className = "field"; div.id = "field_"+f.id;
+    const lab = document.createElement("label");
+    lab.innerHTML = f.label + (f.required ? ' <span class="required">*</span>' : "");
+    div.appendChild(lab);
+    let input;
+    if(f.type==="select"){
+      input = document.createElement("select");
+      f.options.forEach(([v,l])=>{ const o=document.createElement("option"); o.value=v; o.innerText=l; input.appendChild(o); });
+      input.onchange = ()=>{ if(f.onchange) window[f.onchange](); };
+      input.id = f.id;
+      div.appendChild(input);
+    } else if(f.type==="dselect"){
+      const wrap = document.createElement("div"); wrap.className="dselect-wrap";
+      input = document.createElement("select"); input.id = f.id;
+      input.onchange = ()=>{ onDSelectChange(f.id, f.tipoCampo); };
+      wrap.appendChild(input);
+      const newRow = document.createElement("div"); newRow.className="dselect-new"; newRow.id="new_"+f.id;
+      const newInput = document.createElement("input"); newInput.type="text"; newInput.id="newval_"+f.id; newInput.placeholder="Digite a nova opcao...";
+      const okBtn = document.createElement("button"); okBtn.className="btn sm primary"; okBtn.type="button"; okBtn.innerText="Salvar";
+      okBtn.onclick = ()=>confirmNewOption(f.id, f.tipoCampo);
+      const cancelBtn = document.createElement("button"); cancelBtn.className="btn sm"; cancelBtn.type="button"; cancelBtn.innerText="Cancelar";
+      cancelBtn.onclick = ()=>{ newRow.classList.remove("show"); input.value=""; };
+      newRow.appendChild(newInput); newRow.appendChild(okBtn); newRow.appendChild(cancelBtn);
+      wrap.appendChild(newRow);
+      div.appendChild(wrap);
+    } else {
+      input = document.createElement("input"); input.type="text"; input.placeholder=f.placeholder||""; input.id = f.id;
+      if(f.id==="selb"||f.id==="sku") input.onblur = ()=>{ input.value = input.value.toUpperCase(); };
+      div.appendChild(input);
+    }
+    grid.appendChild(div);
+  });
+  // tipoEquipamento drives profile
+  E("tipoEquipamento").addEventListener("change", function(){ setProfile(profileFromType(this.value)); });
+}
+function fillDSelect(fieldId, tipoCampo, keepValue){
+  const sel = E(fieldId); if(!sel) return;
+  const prev = keepValue!==undefined ? keepValue : sel.value;
+  sel.innerHTML = "";
+  const optBlank = document.createElement("option"); optBlank.value=""; optBlank.innerText="Selecione"; sel.appendChild(optBlank);
+  const list = (opcoesCache[tipoCampo]||[]).filter(o=>o.ativo || o.valor===prev);
+  list.forEach(o=>{ const opt=document.createElement("option"); opt.value=o.valor; opt.innerText=o.valor+(o.ativo?"":" (inativo)"); sel.appendChild(opt); });
+  const optNew = document.createElement("option"); optNew.value="__new__"; optNew.innerText="+ Criar nova opcao"; sel.appendChild(optNew);
+  if(prev && list.some(o=>o.valor===prev)) sel.value = prev;
+}
+function refreshAllDSelects(keepValues){
+  techFields.filter(f=>f.type==="dselect").forEach(f=>{
+    fillDSelect(f.id, f.tipoCampo, keepValues ? keepValues[f.id] : undefined);
+  });
+}
+function onDSelectChange(fieldId, tipoCampo){
+  const sel = E(fieldId), newRow = E("new_"+fieldId);
+  if(fieldId==="categoria") sel.dataset.touched = "1";
+  if(sel.value === "__new__"){
+    newRow.classList.add("show");
+    E("newval_"+fieldId).value = "";
+    E("newval_"+fieldId).focus();
+  } else {
+    newRow.classList.remove("show");
+  }
+}
+async function confirmNewOption(fieldId, tipoCampo){
+  const valInput = E("newval_"+fieldId);
+  const val = trim(valInput.value);
+  if(!val){ valInput.focus(); return; }
+  if(!supa){ alert("Configure a conexao com o Supabase primeiro."); return; }
+  const { error } = await supa.from("opcoes").upsert({tipo_campo:tipoCampo, valor:val, ativo:true}, {onConflict:"tipo_campo,valor"});
+  if(error){ alert("Nao foi possivel salvar a nova opcao: "+error.message); return; }
+  await loadOpcoes(tipoCampo);
+  fillDSelect(fieldId, tipoCampo, val);
+  E(fieldId).value = val;
+  E("new_"+fieldId).classList.remove("show");
+  refreshFilterSelects();
+}
+function updateFieldVisibility(){
+  techFields.forEach(f=>{
+    if(f.id==="tipoEquipamento") return;
+    const vis = fieldVisible(f.id, activeProfile);
+    E("field_"+f.id).classList.toggle("hidden", !vis);
+  });
+  const isMonitor = activeProfile==="monitor";
+  E("section_funcionamento").style.display = isMonitor ? "none" : "block";
+  E("field_funcionamentoGeral").classList.toggle("hidden", isMonitor);
+  E("field_usbFuncionamento").classList.toggle("hidden", isMonitor);
+}
+function updateMonitorUsbState(){
+  const val = E("monitorUsbPossui") ? E("monitorUsbPossui").value : "";
+  const check = E("check_usbMonitor");
+  if(check) check.style.display = (activeProfile==="monitor" && val==="NAO") ? "none" : "";
+}
+function renderChecklistArea(){
+  const area = E("checklistArea"); area.innerHTML = "";
+  const items = checklistProfiles[activeProfile].items;
+  items.forEach(k=>{
+    const d = document.createElement("div"); d.className="check"; d.id="check_"+k;
+    const done = document.createElement("span"); done.id="done_"+k; done.className="done"; done.innerText="Pendente";
+    d.appendChild(done);
+    const title = document.createElement("div"); title.className="check-title"; title.innerText = checkItemLabels[k]||k;
+    d.appendChild(title);
+    const radios = document.createElement("div"); radios.className="radios";
+    const grades = k==="usbMonitor" ? ["A","B","C","D","NA"] : ["A","B","C","D"];
+    grades.forEach(g=>{
+      const lab = document.createElement("label");
+      lab.innerHTML = '<input type="radio" name="'+k+'" value="'+g+'" onclick="markDone(\''+k+'\')"> '+(g==="NA"?"N/A":g);
+      radios.appendChild(lab);
+    });
+    d.appendChild(radios);
+    const obsLab = document.createElement("label"); obsLab.innerText="Motivo / observacao"; obsLab.style.fontSize="11.5px";
+    d.appendChild(obsLab);
+    const obs = document.createElement("textarea"); obs.id=k+"Obs";
+    d.appendChild(obs);
+    area.appendChild(d);
+  });
+  updateMonitorUsbState();
+  updateProgress();
+}
+function markDone(k){
+  const val = radioVal(k);
+  const d = E("done_"+k);
+  if(d){ d.innerText = val || "Pendente"; d.className = "done"+(val?" ok":""); }
+  updateProgress();
+}
+function radioVal(name){
+  const els = document.getElementsByName(name);
+  for(let i=0;i<els.length;i++) if(els[i].checked) return els[i].value;
+  return "";
+}
+function setRadio(name,val){
+  const els = document.getElementsByName(name);
+  for(let i=0;i<els.length;i++) els[i].checked = (els[i].value===val);
+}
+function updateProgress(){
+  const items = checklistProfiles[activeProfile].items;
+  let filled = 0;
+  items.forEach(k=>{ if(radioVal(k)) filled++; });
+  const pct = items.length ? Math.round(filled/items.length*100) : 0;
+  E("progressBar").style.width = pct+"%";
+  E("progressLabel").innerText = filled+" de "+items.length+" itens preenchidos";
+}
+function setProfile(p){
+  activeProfile = checklistProfiles[p] ? p : "notebook";
+  E("tipoEquipamento").value = checklistProfiles[activeProfile].type;
+  const catSel = E("categoria");
+  if(catSel && !catSel.dataset.touched){ catSel.value = profileDefaultCategoria[activeProfile] || ""; }
+  buildProfileTabs();
+  updateFieldVisibility();
+  renderChecklistArea();
+}
+
+function snapshot(){
+  const d = {};
+  techFields.forEach(f=>{ const el=E(f.id); if(el) d[f.id]=trim(el.value); });
+  d.perfilChecklist = activeProfile;
+  d.tipoCodigo = equipmentTypeCode(d.tipoEquipamento);
+  d.funcionamento = radioVal("funcionamento");
+  d.usbFuncionamento = radioVal("usbFuncionamento");
+  allItemKeys.forEach(k=>{ d[k]=radioVal(k); const o=E(k+"Obs"); d[k+"Obs"]= o?trim(o.value):""; });
+  return d;
+}
+function validateForm(d){
+  const errors = [];
+  if(!trim(d.selb)) errors.push("SELB");
+  const items = checklistProfiles[activeProfile].items;
+  items.forEach(k=>{ if(!d[k]) errors.push(checkItemLabels[k]||k); });
+  return errors;
+}
+function duplicateSelb(selb, ignoreId){
+  selb = String(selb||"").toUpperCase();
+  return allHistory.some(r=>String(r.selb||"").toUpperCase()===selb && r.id!==ignoreId);
+}
+function msgBox(id, text, type){
+  const el = E(id); el.className = "msg "+type; el.innerText = text; el.style.display="block";
+  clearTimeout(el._t); el._t = setTimeout(()=>{ el.style.display="none"; }, 6000);
+}
+
+/* =====================================================================
+   TIMER / FLUXO DE ANALISE
+   ===================================================================== */
+function fmtClock(sec){ return fmtDuration(sec); }
+function tickTimer(){
+  const sec = Math.floor((Date.now()-startTime)/1000)+elapsedBeforePause;
+  E("timer").innerText = fmtClock(sec);
+}
+function startAnalysis(){
+  startTime = Date.now(); elapsedBeforePause = 0;
+  timerInterval = setInterval(tickTimer, 500);
+  E("startBtn").style.display="none";
+  E("finishBtn").style.display="inline-block";
+  msgBox("formMsg","Analise iniciada. Preencha o checklist e finalize quando concluir.","ok");
+}
+async function finishAnalysis(){
+  if(!requireLabRole()) return;
+  const d = snapshot();
+  d.selb = d.selb.toUpperCase(); d.sku = d.sku.toUpperCase();
+  const errors = validateForm(d);
+  if(errors.length){ msgBox("formMsg","Preencha os campos obrigatorios: "+errors.join(", ")+".","err"); return; }
+  if(duplicateSelb(d.selb, null) && !confirm("Ja existe outro registro com este SELB. Deseja salvar mesmo assim?")) return;
+  const c = calc(d, checklistProfiles[activeProfile].items);
+  const secs = startTime ? Math.floor((Date.now()-startTime)/1000)+elapsedBeforePause : 0;
+  const now = new Date();
+  d.data = now.toLocaleString("pt-BR");
+  d.dataISO = now.toISOString().slice(0,10);
+  d.horarioInicio = startTime ? new Date(startTime).toLocaleTimeString("pt-BR") : "";
+  d.horarioFim = now.toLocaleTimeString("pt-BR");
+  d.tempoSegundos = secs;
+  d.media = c.avg; d.qualidadeGeral = c.grade;
+  d.id = "R"+Date.now()+"_"+Math.floor(Math.random()*90000+10000);
+  d.createdAtMs = Date.now(); d.updatedAtMs = Date.now();
+  d.atualizadoEm = now.toLocaleString("pt-BR");
+  clearInterval(timerInterval); startTime=null;
+  const ok = await upsertRecord(d);
+  if(!ok) return;
+  showResult(c);
+  resetForm();
+  await loadHistory();
+  msgBox("formMsg","Registro salvo com sucesso.","ok");
+}
+function showResult(c){
+  E("resultBox").innerHTML = '<div style="font-size:12px;color:var(--muted);">Media</div><div style="font-size:22px;font-weight:800;">'+String(c.avg).replace(".",",")+'</div><span class="badge '+c.grade.toLowerCase()+'" style="font-size:14px;">'+c.grade+'</span>';
+}
+function resetForm(){
+  techFields.forEach(f=>{ const el=E(f.id); if(el) el.value=""; });
+  document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
+  allItemKeys.forEach(k=>{ const o=E(k+"Obs"); if(o) o.value=""; });
+  if(E("categoria")) E("categoria").dataset.touched = "";
+  E("timer").innerText="00:00:00";
+  E("startBtn").style.display="inline-block";
+  E("finishBtn").style.display="none";
+  setProfile("notebook");
+}
+
+/* =====================================================================
+   EDICAO / EXCLUSAO
+   ===================================================================== */
+function findRecord(id){ return allHistory.find(r=>r.id===id); }
+function editRecord(id){
+  const r = findRecord(id); if(!r) return;
+  if(startTime && !confirm("Existe uma analise em andamento. Deseja cancelar essa analise e editar o registro?")) return;
+  clearInterval(timerInterval); startTime=null;
+  resetFormKeepProfile();
+  editId = id;
+  setProfile(profileFromRecord(r));
+  techFields.forEach(f=>{ const el=E(f.id); if(el) el.value = r[f.id]||""; });
+  setRadio("funcionamento", r.funcionamento||"");
+  setRadio("usbFuncionamento", r.usbFuncionamento||"");
+  allItemKeys.forEach(k=>{ setRadio(k, r[k]||""); const o=E(k+"Obs"); if(o) o.value=r[k+"Obs"]||""; markDone(k); });
+  updateMonitorUsbState();
+  E("timer").innerText = fmtClock(r.tempoSegundos);
+  E("startBtn").style.display="none"; E("finishBtn").style.display="none";
+  E("editMode").style.display="block";
+  E("saveEditBtn").style.display="inline-block"; E("cancelEditBtn").style.display="inline-block";
+  updateProgress();
+  showTab("nova");
+  msgBox("formMsg","Registro carregado para edicao. O tempo original sera preservado.","warn");
+  window.scrollTo(0,0);
+}
+function resetFormKeepProfile(){
+  techFields.forEach(f=>{ const el=E(f.id); if(el) el.value=""; });
+  document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
+  allItemKeys.forEach(k=>{ const o=E(k+"Obs"); if(o) o.value=""; });
+  if(E("categoria")) E("categoria").dataset.touched = "";
+}
+async function saveEditedRecord(){
+  if(!requireLabRole()) return;
+  if(!editId) return;
+  const d = snapshot();
+  d.selb = d.selb.toUpperCase(); d.sku = d.sku.toUpperCase();
+  const errors = validateForm(d);
+  if(errors.length){ msgBox("formMsg","Preencha os campos obrigatorios: "+errors.join(", ")+".","err"); return; }
+  if(duplicateSelb(d.selb, editId) && !confirm("Ja existe outro registro com este SELB. Deseja salvar mesmo assim?")) return;
+  const r = findRecord(editId); if(!r) return;
+  const c = calc(d, checklistProfiles[activeProfile].items);
+  Object.assign(r, d);
+  r.media = c.avg; r.qualidadeGeral = c.grade;
+  r.atualizadoEm = new Date().toLocaleString("pt-BR");
+  r.updatedAtMs = Date.now();
+  const ok = await upsertRecord(r);
+  if(!ok) return;
+  editId = null;
+  E("editMode").style.display="none";
+  E("saveEditBtn").style.display="none"; E("cancelEditBtn").style.display="none";
+  resetForm();
+  await loadHistory();
+  msgBox("formMsg","Registro atualizado com sucesso.","ok");
+}
+function cancelEdit(){
+  editId = null;
+  E("editMode").style.display="none";
+  E("saveEditBtn").style.display="none"; E("cancelEditBtn").style.display="none";
+  resetForm();
+}
+async function deleteRecord(id){
+  if(!requireLabRole()) return;
+  const r = findRecord(id); if(!r) return;
+  if(!confirm("Excluir definitivamente o registro do SELB "+r.selb+"?")) return;
+  const ok = await softDelete(id);
+  if(!ok) return;
+  await loadHistory();
+}
+
+/* =====================================================================
+   HISTORICO / FILTROS
+   ===================================================================== */
+function filtered(){
+  const q = String(E("search").value||"").toLowerCase();
+  const grade = E("gradeFilter").value;
+  const func = E("funcFilter").value;
+  const brand = String(E("brandFilter").value||"").toLowerCase();
+  const from = trim(E("dateFrom").value), to = trim(E("dateTo").value);
+  return allHistory.filter(r=>{
+    const hay = [r.selb,r.sku,r.modelo,r.processador,r.geracao,r.marca,r.tipoEquipamento,r.tipoCodigo,r.desktopFormato,equipmentDescription(r),productIdentifier(r),productPattern(r),r.tipoArmazenamento,r.sistemaEdicao,r.fonte,r.cameraTeste,r.hdmiUsbC,r.bateriaStatus,r.monitorUsbPossui].join(" ").toLowerCase();
+    if(q && hay.indexOf(q)<0) return false;
+    if(grade && resultQuality(r)!==grade) return false;
+    if(func && r.funcionamento!==func) return false;
+    if(brand && String(r.marca||"").toLowerCase().indexOf(brand)<0) return false;
+    const dt = String(r.dataISO||"");
+    if(from && dt && dt<from) return false;
+    if(to && dt && dt>to) return false;
+    return true;
+  });
+}
+function clearFilters(){
+  ["search","brandFilter","gradeFilter","funcFilter","dateFrom","dateTo"].forEach(id=>E(id).value="");
+  renderHistory();
+}
+function jsArg(v){ return String(v||"").replace(/'/g,"\\'"); }
+function renderHistory(){
+  const h = filtered(), tb = E("historyBody");
+  tb.innerHTML = "";
+  h.forEach(r=>{
+    const tr = document.createElement("tr");
+    const grade = resultQuality(r);
+    tr.innerHTML =
+      '<td><button class="btn sm" onclick="editRecord(\''+jsArg(r.id)+'\')">Editar</button> <button class="btn sm danger" onclick="deleteRecord(\''+jsArg(r.id)+'\')">Excluir</button></td>'+
+      '<td>'+htmlEsc(productIdentifier(r))+'</td>'+
+      '<td>'+htmlEsc(productPattern(r))+'</td>'+
+      '<td>'+htmlEsc(r.data)+'</td><td>'+htmlEsc(r.selb)+'</td><td>'+htmlEsc(r.sku)+'</td>'+
+      '<td>'+htmlEsc(equipmentDescription(r))+'</td><td>'+htmlEsc(r.marca)+'</td><td>'+htmlEsc(r.modelo)+'</td>'+
+      '<td>'+htmlEsc(processorPattern(r))+'</td><td>'+htmlEsc(r.memoria)+'</td><td>'+htmlEsc(r.armazenamento)+'</td>'+
+      '<td>'+htmlEsc(r.sistema)+'</td><td>'+htmlEsc(r.funcionamento)+'</td><td>'+htmlEsc(r.usbFuncionamento)+'</td>'+
+      '<td>'+String(r.media).replace(".",",")+'</td><td><span class="badge '+grade.toLowerCase()+'">'+grade+'</span></td>'+
+      '<td>'+fmtDuration(r.tempoSegundos)+'</td>';
+    tb.appendChild(tr);
+  });
+  E("historyCount").innerText = h.length+" registro(s) exibido(s) de "+allHistory.length;
+}
+function htmlEsc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* =====================================================================
+   DASHBOARD
+   ===================================================================== */
+function renderDashboard(){
+  const h = allHistory; let sum=0,min=0,max=0,partial=0,avgScore=0,validGrades=0;
+  const gradeScore={A:5,B:4,C:3,D:2};
+  h.forEach((r,i)=>{
+    const t = Number(r.tempoSegundos)||0; sum+=t;
+    if(i===0||t<min) min=t; if(t>max) max=t;
+    if(r.funcionamento==="Parcial") partial++;
+    const g = resultQuality(r); if(gradeScore[g]){ avgScore+=gradeScore[g]; validGrades++; }
+  });
+  E("mTotal").innerText = h.length;
+  E("mAvg").innerText = h.length ? fmtDuration(sum/h.length) : "00:00:00";
+  E("mBest").innerText = h.length ? fmtDuration(min) : "00:00:00";
+  E("mWorst").innerText = h.length ? fmtDuration(max) : "00:00:00";
+  E("mPartial").innerText = partial;
+  E("mQuality").innerText = validGrades ? String(Math.round((avgScore/validGrades)*100)/100).replace(".",",") : "0";
+  ["A","B","C","D"].forEach(g=>{ E("count"+g).innerText = h.filter(r=>resultQuality(r)===g).length; });
+}
+
+/* =====================================================================
+   EXPORTACAO
+   ===================================================================== */
+function exportCSV(){
+  const profile = exportProfileSel;
+  const rows = allHistory.filter(r=>profileFromRecord(r)===profile);
+  const headers = exportHeadersList(profile);
+  const csvRows = [headers.join(";")];
+  rows.forEach(r=>{
+    const row = exportRow(r, profile).map(v=>{
+      let s = String(v==null?"":v).replace(/"/g,'""');
+      if(s.indexOf(";")>=0||s.indexOf("\n")>=0) s='"'+s+'"';
+      return s;
+    });
+    csvRows.push(row.join(";"));
+  });
+  downloadBlob(csvRows.join("\r\n"), "inspecoes_"+profile+".csv", "text/csv;charset=utf-8");
+}
+async function exportXLSX(){
+  const profile = exportProfileSel;
+  const rows = allHistory.filter(r=>profileFromRecord(r)===profile);
+  const headers = exportHeadersList(profile);
+  const baseCols = exportBaseColumns(profile).length;
+  const keys = exportChecklistKeys(profile);
+  const wb = new ExcelJS.Workbook();
+  const sheetName = checklistProfiles[profile].label.replace(/[\\/*?:\[\]]/g,"-").substring(0,31);
+  const ws = wb.addWorksheet(sheetName);
+
+  ws.addRow(headers);
+  rows.forEach(r=>{ ws.addRow(exportRow(r, profile)); });
+
+  // largura das colunas - identica ao layout do HTA (mesmas colunas fixas + colunas de observacao)
+  const fixedWidths = {1:14, 2:16, 3:68, 4:22, 5:14, 6:20};
+  const obsCols = keys.map((k,i)=> baseCols + 2 + (i*2)); // 1-indexado
+  for(let c=1;c<=headers.length;c++){
+    const col = ws.getColumn(c);
+    if(fixedWidths[c]) col.width = fixedWidths[c];
+    else if(obsCols.includes(c)) col.width = 32;
+    else {
+      // aproximacao de autofit: maior conteudo da coluna (cabecalho ou dados), limitado a uma faixa legivel
+      let maxLen = String(headers[c-1]||"").length;
+      rows.forEach(r=>{ const v = exportRow(r,profile)[c-1]; const l = String(v==null?"":v).length; if(l>maxLen) maxLen=l; });
+      col.width = Math.min(Math.max(maxLen+2, 10), 40);
+    }
+  }
+  ws.getColumn(1).numFmt = "0.00"; // RESULTADO - Media
+  if(obsCols.length) obsCols.forEach(c=> ws.getColumn(c).alignment = {wrapText:true, vertical:"bottom"});
+  ws.getColumn(3).alignment = {wrapText:true, vertical:"bottom"}; // Padrao de cadastro
+
+  const headerRow = ws.getRow(1);
+  headerRow.height = 35;
+  headerRow.eachCell(cell=>{
+    cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF00B0F0"}};
+    cell.font = {bold:true, color:{argb:"FF000000"}};
+    cell.alignment = {horizontal:"center", vertical:"middle", wrapText:true};
+  });
+  // bordas finas em toda a area usada, alinhamento vertical inferior nos dados (igual ao HTA)
+  for(let rIdx=1; rIdx<=rows.length+1; rIdx++){
+    const row = ws.getRow(rIdx);
+    for(let c=1;c<=headers.length;c++){
+      const cell = row.getCell(c);
+      cell.border = {top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
+      if(rIdx>1 && !cell.alignment) cell.alignment = {vertical:"bottom"};
+    }
+  }
+  ws.views = [{state:"frozen", ySplit:1}];
+  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
+
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(buf, "PLANILHA_ATUAL_"+profile+".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+/* =====================================================================
+   MULTI-SELECT COMPACTO (categorias)
+   ===================================================================== */
+var catFilterState = {all:true, set:new Set()};
+var histExportState = {all:true, set:new Set()};
+document.addEventListener("click", ()=>{ document.querySelectorAll(".msel-panel.show").forEach(p=>p.classList.remove("show")); });
+
+function categoriaOptionsList(){ return (opcoesCache["categoria"]||[]).filter(o=>o.ativo).map(o=>o.valor); }
+function categoriaMatches(state, value){
+  if(state.all) return true;
+  if(!value) return false;
+  return state.set.has(value);
+}
+function renderMsel(containerId, state, label, onChange){
+  const container = E(containerId); if(!container) return;
+  const options = categoriaOptionsList();
+  container.innerHTML = "";
+  const btn = document.createElement("button"); btn.type="button"; btn.className="msel-btn";
+  const labelText = state.all ? (label+": Todas") : (state.set.size ? (label+": "+state.set.size+" selecionada"+(state.set.size>1?"s":"") ) : (label+": nenhuma"));
+  btn.innerText = labelText+" \u25BE";
+  const panel = document.createElement("div"); panel.className="msel-panel";
+
+  const allLabel = document.createElement("label");
+  const allCb = document.createElement("input"); allCb.type="checkbox"; allCb.checked = state.all;
+  allCb.onchange = ()=>{
+    state.all = allCb.checked;
+    state.set = allCb.checked ? new Set(options) : new Set();
+    renderMsel(containerId, state, label, onChange);
+    if(onChange) onChange();
+  };
+  allLabel.appendChild(allCb); allLabel.appendChild(document.createTextNode(" Selecionar todas"));
+  panel.appendChild(allLabel);
+  panel.appendChild(document.createElement("hr"));
+
+  options.forEach(opt=>{
+    const lab = document.createElement("label");
+    const cb = document.createElement("input"); cb.type="checkbox";
+    cb.checked = state.all || state.set.has(opt);
+    cb.onchange = ()=>{
+      if(state.all){ state.all=false; state.set = new Set(options); }
+      if(cb.checked) state.set.add(opt); else state.set.delete(opt);
+      if(state.set.size===options.length) state.all = true;
+      renderMsel(containerId, state, label, onChange);
+      if(onChange) onChange();
+    };
+    lab.appendChild(cb); lab.appendChild(document.createTextNode(" "+opt));
+    panel.appendChild(lab);
+  });
+  const actions = document.createElement("div"); actions.className="msel-actions";
+  const clearBtn = document.createElement("button"); clearBtn.className="linklike"; clearBtn.type="button"; clearBtn.innerText="Limpar selecao";
+  clearBtn.onclick = ()=>{ state.all=false; state.set=new Set(); renderMsel(containerId, state, label, onChange); if(onChange) onChange(); };
+  actions.appendChild(clearBtn);
+  panel.appendChild(actions);
+
+  btn.onclick = (e)=>{
+    e.stopPropagation();
+    const wasOpen = panel.classList.contains("show");
+    document.querySelectorAll(".msel-panel.show").forEach(p=>p.classList.remove("show"));
+    if(!wasOpen) panel.classList.add("show");
+  };
+  container.appendChild(btn);
+  container.appendChild(panel);
+}
+function buildCategoriaMultiSelects(){
+  renderMsel("mselCategoria", catFilterState, "Categorias", renderCatalog);
+  renderMsel("mselHistExport", histExportState, "Categorias", null);
+}
+
+/* =====================================================================
+   FILTROS DO CATALOGO COMERCIAL
+   ===================================================================== */
+function refreshFilterSelects(){
+  const map = {catMarca:"marca", catProcessador:"processador", catGeracao:"geracao", catMemoria:"memoria",
+    catArmazenamento:"armazenamento", catTipoArm:"tipo_armazenamento", catPlacaVideo:"placa_video",
+    catTela:"tela", catSistema:"sistema_operacional"};
+  Object.keys(map).forEach(selId=>{
+    const sel = E(selId); if(!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Todas</option>';
+    (opcoesCache[map[selId]]||[]).filter(o=>o.ativo).forEach(o=>{
+      const opt = document.createElement("option"); opt.value=o.valor; opt.innerText=o.valor; sel.appendChild(opt);
+    });
+    sel.value = prev;
+  });
+}
+function categoriaOf(r){ return r.categoria || equipmentDescription(r); }
+function catalogRecords(){
+  const bySelb = new Map();
+  allHistory.forEach(r=>{
+    const key = r.selb ? String(r.selb).toUpperCase() : ("__id_"+r.id);
+    const existing = bySelb.get(key);
+    if(!existing || (r.updatedAtMs||0) >= (existing.updatedAtMs||0)) bySelb.set(key, r);
+  });
+  return Array.from(bySelb.values());
+}
+function catalogFiltered(){
+  const q = String(E("catSearch").value||"").toLowerCase();
+  const nota = E("catNota").value, selb = String(E("catSelb").value||"").toLowerCase();
+  const marca = E("catMarca").value, modelo = String(E("catModelo").value||"").toLowerCase();
+  const proc = E("catProcessador").value, ger = E("catGeracao").value, mem = E("catMemoria").value;
+  const arm = E("catArmazenamento").value, tipoArm = E("catTipoArm").value, pv = E("catPlacaVideo").value;
+  const tela = E("catTela").value, sist = E("catSistema").value;
+  return catalogRecords().filter(r=>{
+    if(!categoriaMatches(catFilterState, categoriaOf(r))) return false;
+    if(nota && resultQuality(r)!==nota) return false;
+    if(selb && !String(r.selb||"").toLowerCase().includes(selb)) return false;
+    if(marca && r.marca!==marca) return false;
+    if(modelo && !String(r.modelo||"").toLowerCase().includes(modelo)) return false;
+    if(proc && r.processador!==proc) return false;
+    if(ger && r.geracao!==ger) return false;
+    if(mem && r.memoria!==mem) return false;
+    if(arm && r.armazenamento!==arm) return false;
+    if(tipoArm && r.tipoArmazenamento!==tipoArm) return false;
+    if(pv && r.placaVideo!==pv) return false;
+    if(tela && r.telaInfo!==tela) return false;
+    if(sist && r.sistema!==sist) return false;
+    if(q){
+      const hay = [r.selb,r.sku,categoriaOf(r),r.marca,r.modelo,r.processador,r.geracao,r.memoria,r.armazenamento,r.tipoArmazenamento,r.placaVideo,r.telaInfo,r.sistema,r.sistemaEdicao,productPattern(r)].join(" ").toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+function clearCatalogFilters(){
+  ["catSearch","catSelb","catModelo"].forEach(id=>E(id).value="");
+  ["catNota","catMarca","catProcessador","catGeracao","catMemoria","catArmazenamento","catTipoArm","catPlacaVideo","catTela","catSistema"].forEach(id=>E(id).value="");
+  catFilterState.all = true; catFilterState.set = new Set();
+  renderMsel("mselCategoria", catFilterState, "Categorias", renderCatalog);
+  renderCatalog();
+}
+function renderCatalog(){
+  if(!E("catalogBody")) return;
+  const list = catalogFiltered();
+  const tb = E("catalogBody"); tb.innerHTML = "";
+  list.forEach(r=>{
+    const grade = resultQuality(r);
+    const tr = document.createElement("tr"); tr.className="resultrow";
+    tr.onclick = ()=>openDetail(r.id);
+    tr.innerHTML = "<td>"+htmlEsc(r.selb)+"</td><td>"+htmlEsc(categoriaOf(r))+"</td><td>"+htmlEsc(r.marca)+"</td><td>"+htmlEsc(r.modelo)+"</td>"+
+      "<td>"+htmlEsc(processorPattern(r))+"</td><td>"+htmlEsc(r.geracao)+"</td><td>"+htmlEsc(r.memoria)+"</td><td>"+htmlEsc(r.armazenamento)+"</td>"+
+      "<td>"+htmlEsc(r.telaInfo)+"</td><td>"+htmlEsc(r.sistema)+"</td><td><span class='badge "+grade.toLowerCase()+"'>"+grade+"</span></td>";
+    tb.appendChild(tr);
+  });
+  E("catCount").innerText = list.length+" equipamento(s) encontrado(s)"+(allHistory.length?(" (de "+catalogRecords().length+" cadastrados, ultima inspecao por SELB)"):"");
+  renderCatalogMetrics(list);
+}
+function renderCatalogMetrics(list){
+  const box = E("catMetrics"); if(!box) return;
+  const count = cat => list.filter(r=>{
+    const c = categoriaOf(r).toLowerCase();
+    return cat.some(x=>c.includes(x));
+  }).length;
+  const cards = [
+    ["Total de equipamentos", list.length],
+    ["Notebooks", count(["notebook"])],
+    ["Desktops", count(["desktop"])],
+    ["Monitores", count(["monitor"])],
+    ["Celulares / Tablets", count(["celular","tablet"])],
+    ["Nota A", list.filter(r=>resultQuality(r)==="A").length],
+    ["Nota B", list.filter(r=>resultQuality(r)==="B").length]
+  ];
+  box.innerHTML = cards.map(c=>'<div class="metric"><div class="n">'+c[1]+'</div><div class="l">'+c[0]+'</div></div>').join("");
+}
+
+/* =====================================================================
+   DETALHES DO EQUIPAMENTO
+   ===================================================================== */
+const gradeLabels = {A:"Excelente", B:"Bom", C:"Regular", D:"Ruim"};
+function openDetail(id){
+  const r = findRecord(id); if(!r) return;
+  const grade = resultQuality(r);
+  E("detTitle").innerText = (r.selb||"Equipamento") + " - " + categoriaOf(r);
+  E("detSub").innerText = productPattern(r);
+  const items = [
+    ["SELB", r.selb], ["SKU", r.sku], ["Categoria", categoriaOf(r)], ["Marca", r.marca], ["Modelo", r.modelo],
+    ["Processador", processorPattern(r)], ["Geracao", r.geracao], ["Memoria", r.memoria],
+    ["Armazenamento", r.armazenamento], ["Tipo armazenamento", r.tipoArmazenamento],
+    ["Placa de video", r.placaVideo], ["Tela", r.telaInfo], ["Sistema operacional", r.sistema],
+    ["Funcionamento", r.funcionamento], ["Data da inspecao", r.data]
+  ];
+  E("detGrid").innerHTML = items.filter(([l,v])=>v).map(([l,v])=>
+    '<div class="detail-item"><div class="l">'+htmlEsc(l)+'</div><div class="v">'+htmlEsc(v)+'</div></div>'
+  ).join("");
+  E("detResult").innerHTML = '<span class="badge '+grade.toLowerCase()+'" style="font-size:15px;">'+grade+'</span> '+
+    '<b>'+(gradeLabels[grade]||"")+'</b> <span class="hint">- media '+String(r.media||0).replace(".",",")+'</span>';
+  const profile = profileFromRecord(r), keys = checklistProfiles[profile] ? checklistProfiles[profile].items : [];
+  const rows = keys.filter(k=>r[k]).map(k=>{
+    const nota = r[k], obs = r[k+"Obs"]||"";
+    const cls = (nota==="C"||nota==="D") ? ' style="color:var(--red);font-weight:700;"' : "";
+    return '<div class="attention-item"><span'+cls+'>'+htmlEsc(checkItemLabels[k]||k)+': '+nota+'</span>'+(obs?'<span class="obs">'+htmlEsc(obs)+'</span>':'')+'</div>';
+  });
+  E("detAttention").innerHTML = rows.length ? rows.join("") : '<div class="hint">Nenhum item de checklist registrado.</div>';
+  E("detailModal").classList.add("show");
+}
+function closeDetail(){ E("detailModal").classList.remove("show"); }
+
+/* =====================================================================
+   EXPORTACAO UNIFICADA (multi-categoria, resumida) - Comercial + Laboratorio
+   ===================================================================== */
+function unifiedHeaders(){
+  return ["SELB","SKU","Categoria","Marca","Modelo","Processador","Geracao","Memoria","Armazenamento",
+    "Tipo armazenamento","Placa de video","Tela","Sistema operacional","Funcionamento","Nota geral","Media",
+    "Data da inspecao","Padrao de cadastro"];
+}
+function unifiedRow(r){
+  return [r.selb, r.sku, categoriaOf(r), r.marca, r.modelo, processorPattern(r), r.geracao, r.memoria,
+    r.armazenamento, r.tipoArmazenamento, r.placaVideo, r.telaInfo, r.sistema, r.funcionamento,
+    resultQuality(r), r.media, r.data, productPattern(r)];
+}
+async function exportUnifiedXLSX(records, filenameBase, categoriaState){
+  const state = categoriaState || catFilterState;
+  const rows = records.filter(r=>categoriaMatches(state, categoriaOf(r)));
+  if(!rows.length){ alert("Nenhum equipamento para exportar com os filtros atuais."); return; }
+  const headers = unifiedHeaders();
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Equipamentos");
+  ws.addRow(headers);
+  rows.forEach(r=>ws.addRow(unifiedRow(r)));
+  for(let i=0;i<headers.length;i++){
+    const header = headers[i];
+    ws.getColumn(i+1).width = header==="Padrao de cadastro" ? 60 : Math.min(Math.max(header.length+4, 12), 30);
+  }
+  const headerRow = ws.getRow(1);
+  headerRow.height = 26;
+  headerRow.eachCell(cell=>{
+    cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF00B0F0"}};
+    cell.font = {bold:true, color:{argb:"FF000000"}};
+    cell.alignment = {horizontal:"center", vertical:"middle", wrapText:true};
+  });
+  ws.views = [{state:"frozen", ySplit:1}];
+  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(buf, filenameBase+".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+}
+function exportCatalogXLSX(){ return exportUnifiedXLSX(catalogFiltered(), "equipamentos_categorizados", catFilterState); }
+
+/* =====================================================================
+   ADMINISTRACAO DE OPCOES (ADMIN / LABORATORIO)
+   ===================================================================== */
+var adminActiveTipo = "categoria";
+function buildOptTabs(){
+  const wrap = E("optTabs"); if(!wrap) return;
+  wrap.innerHTML = "";
+  DYNAMIC_TIPOS.forEach(t=>{
+    const b = document.createElement("button");
+    b.innerText = t.replace("_"," ");
+    b.className = t===adminActiveTipo ? "active" : "";
+    b.onclick = ()=>{ adminActiveTipo=t; buildOptTabs(); renderAdminOptions(); };
+    wrap.appendChild(b);
+  });
+}
+function renderAdminOptions(){
+  const list = E("optList"); if(!list) return;
+  const items = (opcoesCache[adminActiveTipo]||[]).slice().sort((a,b)=>a.valor.localeCompare(b.valor));
+  list.innerHTML = "";
+  items.forEach(o=>{
+    const row = document.createElement("div"); row.className = "opt-row"+(o.ativo?"":" inactive");
+    row.innerHTML = '<span>'+htmlEsc(o.valor)+'</span>';
+    const lab = document.createElement("label"); lab.className="switch";
+    const cb = document.createElement("input"); cb.type="checkbox"; cb.checked = o.ativo;
+    cb.onchange = ()=>adminToggleOption(o.id, cb.checked);
+    const slider = document.createElement("span"); slider.className="slider";
+    lab.appendChild(cb); lab.appendChild(slider);
+    row.appendChild(lab);
+    list.appendChild(row);
+  });
+  if(!items.length) list.innerHTML = '<div class="hint">Nenhuma opcao cadastrada ainda.</div>';
+}
+async function adminToggleOption(id, ativo){
+  if(!requireLabRole()) return;
+  const { error } = await supa.from("opcoes").update({ativo, updated_at:new Date().toISOString()}).eq("id", id);
+  if(error){ alert("Erro ao atualizar: "+error.message); return; }
+  await loadOpcoes(adminActiveTipo);
+  renderAdminOptions();
+  refreshAllDSelects();
+  refreshFilterSelects();
+  buildCategoriaMultiSelects();
+}
+async function adminAddOption(){
+  if(!requireLabRole()) return;
+  const input = E("optNewValue");
+  const val = trim(input.value);
+  if(!val) return;
+  const { error } = await supa.from("opcoes").upsert({tipo_campo:adminActiveTipo, valor:val, ativo:true}, {onConflict:"tipo_campo,valor"});
+  if(error){ alert("Erro ao adicionar: "+error.message); return; }
+  input.value = "";
+  await loadOpcoes(adminActiveTipo);
+  renderAdminOptions();
+  refreshAllDSelects();
+  refreshFilterSelects();
+  buildCategoriaMultiSelects();
+}
+
+/* =====================================================================
+   IMPORTACAO DO HISTORICO ANTIGO
+   ===================================================================== */
+let importData = [];
+function handleImportFile(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      let text = reader.result;
+      text = text.replace(/^\uFEFF/,"");
+      const parsed = JSON.parse(text);
+      importData = Array.isArray(parsed) ? parsed : (parsed.records||[]);
+      E("importPreview").innerText = importData.length+" registro(s) encontrado(s) no arquivo. Exemplo: SELB "+(importData[0]?importData[0].selb:"-")+".";
+      E("importBtn").style.display = importData.length ? "inline-block" : "none";
+    }catch(e){
+      E("importPreview").innerText = "Nao foi possivel ler o arquivo: "+e.message+" (tente abrir e salvar novamente como UTF-8 se o problema persistir).";
+      E("importBtn").style.display="none";
+    }
+  };
+  // tenta UTF-16 (formato original do HTA); se vazio/invalido, cai para UTF-8
+  const buf0 = file;
+  const r16 = new FileReader();
+  r16.onload = ()=>{
+    try{
+      let t = r16.result.replace(/^\uFEFF/,"");
+      JSON.parse(t);
+      reader.result = t;
+      const parsed = JSON.parse(t);
+      importData = Array.isArray(parsed) ? parsed : (parsed.records||[]);
+      E("importPreview").innerText = importData.length+" registro(s) encontrado(s) no arquivo.";
+      E("importBtn").style.display = importData.length ? "inline-block" : "none";
+    }catch(e){ reader.readAsText(buf0, "UTF-8"); }
+  };
+  r16.readAsText(file, "UTF-16LE");
+}
+async function runImport(){
+  if(!requireLabRole()) return;
+  if(!supa){ alert("Configure a conexao com o Supabase antes de importar."); return; }
+  if(!importData.length) return;
+  E("importBtn").disabled = true;
+  let ok=0, fail=0;
+  for(const r of importData){
+    // preserva media/qualidadeGeral originais - NAO recalcula (mesmo comportamento do app antigo)
+    const row = {
+      id: r.id, selb: r.selb||null, sku: r.sku||null, perfil_checklist: profileFromRecord(r),
+      tipo_equipamento: r.tipoEquipamento||null, data_iso: r.dataISO||null,
+      qualidade_geral: r.qualidadeGeral || resultQuality(r),
+      created_at_ms: r.updatedAtMs || Date.now(), updated_at_ms: r.updatedAtMs || Date.now(),
+      deleted:false, payload: r
+    };
+    const { error } = await supa.from("inspecoes").upsert(row, {onConflict:"id"});
+    if(error){ fail++; console.error(error); } else ok++;
+  }
+  msgBox("importMsg", ok+" registro(s) importado(s) com sucesso"+(fail?", "+fail+" com erro (veja o console).":"."), fail?"warn":"ok");
+  E("importBtn").disabled = false;
+  await loadHistory();
+}
+
+/* =====================================================================
+   INIT
+   ===================================================================== */
+buildFormGrid();
+buildProfileTabs();
+setProfile("notebook");
+initSupabase();
+</script>
+</body>
+</html>
