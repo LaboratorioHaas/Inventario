@@ -86,7 +86,7 @@ tbody tr:hover{background:#FAFCFB;}
 .metric .n{font-size:26px;font-weight:800;color:var(--green-dark);}
 .metric .l{font-size:12px;color:var(--muted);margin-top:3px;}
 .hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5;}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,20,15,.5);align-items:center;justify-content:center;z-index:50;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,20,15,.5);align-items:center;justify-content:center;z-index:200;}
 .modal-bg.show{display:flex;}
 .modal{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:92vw;}
 .modal h3{margin-top:0;font-size:16px;}
@@ -143,7 +143,7 @@ a{color:var(--green-dark);}
 .resultrow:hover{background:#EFF7F2 !important;}
 
 /* modal generico */
-.modal-bg2{display:none;position:fixed;inset:0;background:rgba(10,20,15,.55);align-items:flex-start;justify-content:center;z-index:60;overflow:auto;padding:36px 16px;}
+.modal-bg2{display:none;position:fixed;inset:0;background:rgba(10,20,15,.55);align-items:flex-start;justify-content:center;z-index:150;overflow:auto;padding:36px 16px;}
 .modal-bg2.show{display:flex;}
 .modal2{background:#fff;border-radius:12px;padding:26px 28px;width:640px;max-width:100%;}
 .modal2 h2{margin:0 0 4px;font-size:18px;color:var(--green-dark);}
@@ -203,6 +203,11 @@ input:checked + .slider:before{transform:translateX(16px);}
         <button class="btn primary" style="width:100%;" onclick="doLoginComercial()">Entrar como Comercial</button>
       </div>
       <div class="login-err" id="loginErrCom"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">
+      <button class="linklike" style="color:var(--muted);" onclick="openConfig()">Configurar conexao com o Supabase</button>
+      <div class="hint" id="connLabelLogin" style="margin-top:4px;"></div>
     </div>
   </div>
 </div>
@@ -735,6 +740,8 @@ function initSupabase(){
 function setConn(ok){
   E("connDot").className = "dot "+(ok?"on":"off");
   E("connLabel").innerText = ok ? "Conectado" : "Sem conexao";
+  const loginLabel = E("connLabelLogin");
+  if(loginLabel) loginLabel.innerText = ok ? "Conectado ao Supabase" : "Ainda nao conectado ao Supabase";
 }
 
 /* ---------- LOGIN / ROLES ---------- */
