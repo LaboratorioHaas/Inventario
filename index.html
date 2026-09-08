@@ -253,6 +253,7 @@ input:checked + .slider:before{transform:translateX(16px);}
         <div class="radiorow">
           <label><input type="radio" name="funcionamento" value="Total"> Total</label>
           <label><input type="radio" name="funcionamento" value="Parcial"> Parcial</label>
+          <label><input type="radio" name="funcionamento" value="Nao liga"> Não liga</label>
         </div>
       </div>
       <div class="field" id="field_usbFuncionamento">
@@ -260,6 +261,7 @@ input:checked + .slider:before{transform:translateX(16px);}
         <div class="radiorow">
           <label><input type="radio" name="usbFuncionamento" value="Total"> Total</label>
           <label><input type="radio" name="usbFuncionamento" value="Parcial"> Parcial</label>
+          <label><input type="radio" name="usbFuncionamento" value="Nao liga"> Não liga</label>
         </div>
       </div>
     </div>
@@ -314,7 +316,7 @@ input:checked + .slider:before{transform:translateX(16px);}
         <option value="">Nota - todas</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
       </select>
       <select id="funcFilter" onchange="renderHistory()">
-        <option value="">Funcionamento - todos</option><option value="Total">Total</option><option value="Parcial">Parcial</option>
+        <option value="">Funcionamento - todos</option><option value="Total">Total</option><option value="Parcial">Parcial</option><option value="Nao liga">Não liga</option>
       </select>
       <input type="text" id="dateFrom" placeholder="Data inicial AAAA-MM-DD" onkeyup="renderHistory()">
       <input type="text" id="dateTo" placeholder="Data final AAAA-MM-DD" onkeyup="renderHistory()">
@@ -458,11 +460,13 @@ const score = { A: 5, B: 4, C: 3, D: 2 };
 const checklistProfiles = {
   notebook: { label: "Notebook", type: "NOTEBOOK", items: ["teclado","camera","portasUsb","portaRedeNotebook","tela","tampaCima","tampaBaixo","palmRest","bateria","hdmiUsbCCheck"] },
   desktop:  { label: "Desktop",  type: "DESKTOP",  items: ["gabinete","placaMae","portasUsb","videoSaida","redeLan","fontePsu","armazenamentoCheck","limpezaInterna"] },
-  mobile:   { label: "Celular/Tablet", type: "CELULAR/TABLET", items: ["telaTouch","camera","altoFalanteMic","botoes","bateria","wifiBluetooth","carregamento","biometria"] },
+  mobile:   { label: "Celular", type: "CELULAR", items: ["telaTouch","camera","altoFalanteMic","botoes","bateria","wifiBluetooth","carregamento","biometria"] },
+  tablet:   { label: "Tablet", type: "TABLET", items: ["telaTouch","camera","altoFalanteMic","botoes","bateria","wifiBluetooth","carregamento","biometria"] },
   coletor:  { label: "Coletor",  type: "COLETOR",  items: ["leitorCodigo","telaTouch","botoesGatilho","bateria","carregamentoDock","wifiBluetooth","sistemaColetor","estruturaColetor"] },
-  monitor:  { label: "Monitor",  type: "MONITOR",  items: ["telaMonitor","funcionamentoMonitor","hdmiMonitor","displayPortMonitor","vgaMonitor","usbCMonitor","usbMonitor","baseMonitor","carcacaMonitor"] }
+  monitor:  { label: "Monitor",  type: "MONITOR",  items: ["telaMonitor","funcionamentoMonitor","hdmiMonitor","displayPortMonitor","vgaMonitor","usbCMonitor","usbMonitor","baseMonitor","carcacaMonitor"] },
+  servidor: { label: "Servidor", type: "SERVIDOR", items: ["gabinete","placaMae","portasUsb","videoSaida","redeLan","fontePsu","armazenamentoCheck","limpezaInterna"] }
 };
-const profileOrder = ["notebook","desktop","mobile","coletor","monitor"];
+const profileOrder = ["notebook","desktop","mobile","tablet","coletor","monitor","servidor"];
 
 const checkItemLabels = {
   teclado:"Teclado", camera:"Camera", portasUsb:"Portas USB", portaRedeNotebook:"Porta de rede (RJ45)",
@@ -500,25 +504,25 @@ const techFields = [
   {id:"bateriaStatus", label:"Bateria", type:"select", options:[["","Selecione"],["BOA","Boa"],["FRACA","Fraca"],["NAO SE APLICA","Nao se aplica"]]}
 ];
 const DYNAMIC_TIPOS = ["tipo_equipamento","marca","processador","geracao","memoria","armazenamento","tipo_armazenamento","placa_video","tela","sistema_operacional"];
-const profileDefaultTipoEquipamento = {notebook:"Notebook", desktop:"Desktop", mobile:"Celular", coletor:"Coletor", monitor:"Monitor"};
+const profileDefaultTipoEquipamento = {notebook:"Notebook", desktop:"Desktop", mobile:"Celular", tablet:"Tablet", coletor:"Coletor", monitor:"Monitor", servidor:"Servidor"};
 
 function fieldVisible(id, p){
-  const isDesktop=p=="desktop", isNotebook=p=="notebook", isMobile=p=="mobile", isColetor=p=="coletor", isMonitor=p=="monitor";
+  const isDesktop=p=="desktop", isNotebook=p=="notebook", isMobile=p=="mobile", isTablet=p=="tablet", isColetor=p=="coletor", isMonitor=p=="monitor", isServidor=p=="servidor";
   switch(id){
-    case "desktopFormato": return isDesktop;
+    case "desktopFormato": return isDesktop||isServidor;
     case "processador": return !isMonitor;
     case "geracao": return !isMonitor;
-    case "memoria": return isNotebook||isDesktop;
+    case "memoria": return isNotebook||isDesktop||isServidor;
     case "armazenamento": return !isMonitor;
-    case "tipoArmazenamento": return isNotebook||isDesktop;
-    case "placaVideo": return isNotebook||isDesktop;
-    case "telaInfo": return isNotebook||isMobile||isColetor||isMonitor;
+    case "tipoArmazenamento": return isNotebook||isDesktop||isServidor;
+    case "placaVideo": return isNotebook||isDesktop||isServidor;
+    case "telaInfo": return isNotebook||isMobile||isTablet||isColetor||isMonitor;
     case "sistema": return !isMonitor;
-    case "sistemaEdicao": return isNotebook||isDesktop;
+    case "sistemaEdicao": return isNotebook||isDesktop||isServidor;
     case "fonte": return true;
-    case "cameraTeste": return isNotebook||isMobile;
-    case "hdmiUsbC": return isNotebook||isDesktop;
-    case "bateriaStatus": return isNotebook||isMobile||isColetor;
+    case "cameraTeste": return isNotebook||isMobile||isTablet;
+    case "hdmiUsbC": return isNotebook||isDesktop||isServidor;
+    case "bateriaStatus": return isNotebook||isMobile||isTablet||isColetor;
     case "monitorUsbPossui": return isMonitor;
     default: return true;
   }
@@ -534,14 +538,17 @@ function cleanProductPart(v){ return trim(v).replace(/\s+/g," "); }
 
 function profileFromType(v){
   v = String(v||"").toUpperCase();
-  if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION"||v==="SERVIDOR") return "desktop";
+  if (v==="SERVIDOR") return "servidor";
+  if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION") return "desktop";
   if (v==="MONITOR") return "monitor";
-  if (v==="CELULAR/TABLET"||v==="CELULAR"||v==="TABLET") return "mobile";
+  if (v==="CELULAR/TABLET"||v==="CELULAR") return "mobile";
+  if (v==="TABLET") return "tablet";
   if (v==="COLETOR") return "coletor";
   return "notebook";
 }
 function equipmentTypeCode(v){
   v = String(v||"").toUpperCase();
+  if (v==="SERVIDOR") return "4";
   if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION") return "1";
   if (v==="MONITOR") return "2";
   if (v==="NOTEBOOK") return "3";
@@ -555,8 +562,10 @@ function equipmentDescription(r){
   const p = profileFromRecord(r), fmt = cleanProductPart(r.desktopFormato), type = cleanProductPart(r.tipoEquipamento);
   if (p==="desktop") return cleanProductPart("DESKTOP "+fmt);
   if (p==="monitor") return "MONITOR";
-  if (p==="mobile") return type ? type.toUpperCase() : "CELULAR/TABLET";
+  if (p==="mobile") return type ? type.toUpperCase() : "CELULAR";
+  if (p==="tablet") return type ? type.toUpperCase() : "TABLET";
   if (p==="coletor") return "COLETOR";
+  if (p==="servidor") return "SERVIDOR";
   if (type) return type;
   return "NOTEBOOK";
 }
@@ -1076,7 +1085,7 @@ function updateProgress(){
 function setProfile(p){
   activeProfile = checklistProfiles[p] ? p : "notebook";
   const typeSel = E("tipoEquipamento");
-  if(typeSel && !typeSel.dataset.touched){ typeSel.value = profileDefaultTipoEquipamento[activeProfile] || ""; }
+  if(typeSel){ typeSel.value = profileDefaultTipoEquipamento[activeProfile] || ""; }
   buildProfileTabs();
   updateFieldVisibility();
   renderChecklistArea();
@@ -1291,17 +1300,22 @@ function htmlEsc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/
    ===================================================================== */
 function renderDashboard(){
   const h = allHistory; let sum=0,min=0,max=0,partial=0,avgScore=0,validGrades=0;
+  let validTimeCount = 0;
   const gradeScore={A:5,B:4,C:3,D:2};
   h.forEach((r,i)=>{
-    const t = Number(r.tempoSegundos)||0; sum+=t;
-    if(i===0||t<min) min=t; if(t>max) max=t;
+    const t = Number(r.tempoSegundos)||0;
+    if(t >= 120 && t <= 1800) {
+      sum+=t; validTimeCount++;
+      if(validTimeCount===1||t<min) min=t; 
+      if(t>max) max=t;
+    }
     if(r.funcionamento==="Parcial") partial++;
     const g = resultQuality(r); if(gradeScore[g]){ avgScore+=gradeScore[g]; validGrades++; }
   });
   E("mTotal").innerText = h.length;
-  E("mAvg").innerText = h.length ? fmtDuration(sum/h.length) : "00:00:00";
-  E("mBest").innerText = h.length ? fmtDuration(min) : "00:00:00";
-  E("mWorst").innerText = h.length ? fmtDuration(max) : "00:00:00";
+  E("mAvg").innerText = validTimeCount ? fmtDuration(sum/validTimeCount) : "00:00:00";
+  E("mBest").innerText = validTimeCount ? fmtDuration(min) : "00:00:00";
+  E("mWorst").innerText = validTimeCount ? fmtDuration(max) : "00:00:00";
   E("mPartial").innerText = partial;
   E("mQuality").innerText = validGrades ? String(Math.round((avgScore/validGrades)*100)/100).replace(".",",") : "0";
   ["A","B","C","D"].forEach(g=>{ E("count"+g).innerText = h.filter(r=>resultQuality(r)===g).length; });
