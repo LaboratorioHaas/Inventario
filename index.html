@@ -301,7 +301,7 @@ input:checked + .slider:before{transform:translateX(16px);}
       </div>
     </div>
     <div class="toprow">
-      <span class="hint">Exportar por categorias (resumido, respeita os filtros abaixo):</span>
+      <span class="hint">Exportar por tipo de equipamento (resumido, respeita os filtros abaixo):</span>
       <div class="actions">
         <span class="msel" id="mselHistExport"></span>
         <button class="btn primary" onclick="exportUnifiedXLSX(filtered(), 'historico_categorias')">Exportar XLSX (categorias)</button>
@@ -370,7 +370,7 @@ input:checked + .slider:before{transform:translateX(16px);}
   </div>
   <div class="catalog-grid">
     <div class="filterpanel">
-      <div class="fgroup"><label>Categoria</label><span class="msel" id="mselCategoria" style="display:block;"></span></div>
+      <div class="fgroup"><label>Tipo de equipamento</label><span class="msel" id="mselCategoria" style="display:block;"></span></div>
       <div class="fgroup"><label>Nota geral</label>
         <select id="catNota" onchange="renderCatalog()"><option value="">Todas</option><option value="A">A - Excelente</option><option value="B">B - Bom</option><option value="C">C - Regular</option><option value="D">D - Ruim</option></select>
       </div>
@@ -393,7 +393,7 @@ input:checked + .slider:before{transform:translateX(16px);}
       <div class="tablewrap">
         <table>
           <thead><tr>
-            <th>SELB</th><th>Categoria</th><th>Marca</th><th>Modelo</th><th>Processador</th>
+            <th>SELB</th><th>Tipo de equipamento</th><th>Marca</th><th>Modelo</th><th>Processador</th>
             <th>Geracao</th><th>Memoria</th><th>Armazenamento</th><th>Tela</th><th>Sistema</th><th>Nota</th>
           </tr></thead>
           <tbody id="catalogBody"></tbody>
@@ -470,7 +470,7 @@ const checkItemLabels = {
   hdmiUsbCCheck:"HDMI / USB-C", gabinete:"Gabinete", placaMae:"Placa mae", videoSaida:"Saida de video",
   redeLan:"Rede LAN", fontePsu:"Fonte / PSU", armazenamentoCheck:"Armazenamento", limpezaInterna:"Limpeza interna",
   telaTouch:"Tela / touch", altoFalanteMic:"Alto-falante / microfone", botoes:"Botoes", wifiBluetooth:"Wi-Fi / Bluetooth",
-  carregamento:"Carregamento", biometria:"Biometria / Face ID", leitorCodigo:"Leitor de codigo",
+  carregamento:"Carregamento", biometria:"Tampa traseira", leitorCodigo:"Leitor de codigo",
   botoesGatilho:"Botoes / gatilho", carregamentoDock:"Carregamento / dock", sistemaColetor:"Sistema do coletor",
   estruturaColetor:"Estrutura", telaMonitor:"Tela", funcionamentoMonitor:"Funcionamento geral",
   hdmiMonitor:"Entrada HDMI", displayPortMonitor:"Entrada DisplayPort", vgaMonitor:"Entrada VGA",
@@ -480,8 +480,7 @@ const checkItemLabels = {
 const techFields = [
   {id:"selb", label:"SELB", required:true, placeholder:"Ex.: SELB12345"},
   {id:"sku", label:"SKU", placeholder:"Codigo interno"},
-  {id:"tipoEquipamento", label:"Tipo de equipamento", type:"select", options:[["","Selecione"],["DESKTOP","Desktop"],["MONITOR","Monitor"],["NOTEBOOK","Notebook"],["CELULAR/TABLET","Celular/Tablet"],["COLETOR","Coletor"]]},
-  {id:"categoria", label:"Categoria", type:"dselect", tipoCampo:"categoria"},
+  {id:"tipoEquipamento", label:"Tipo de equipamento", type:"dselect", tipoCampo:"tipo_equipamento"},
   {id:"desktopFormato", label:"Formato desktop", type:"select", options:[["","Selecione"],["MICRO","Micro"],["SLIM","Slim"],["FULL TOWER","Full tower"]]},
   {id:"marca", label:"Marca", type:"dselect", tipoCampo:"marca"},
   {id:"modelo", label:"Modelo", placeholder:"Ex.: PROBOOK 4"},
@@ -500,13 +499,12 @@ const techFields = [
   {id:"hdmiUsbC", label:"HDMI / USB-C testado", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
   {id:"bateriaStatus", label:"Bateria", type:"select", options:[["","Selecione"],["BOA","Boa"],["FRACA","Fraca"],["NAO SE APLICA","Nao se aplica"]]}
 ];
-const DYNAMIC_TIPOS = ["categoria","marca","processador","geracao","memoria","armazenamento","tipo_armazenamento","placa_video","tela","sistema_operacional"];
-const profileDefaultCategoria = {notebook:"Notebook", desktop:"Desktop", mobile:"Celular", coletor:"Coletor", monitor:"Monitor"};
+const DYNAMIC_TIPOS = ["tipo_equipamento","marca","processador","geracao","memoria","armazenamento","tipo_armazenamento","placa_video","tela","sistema_operacional"];
+const profileDefaultTipoEquipamento = {notebook:"Notebook", desktop:"Desktop", mobile:"Celular", coletor:"Coletor", monitor:"Monitor"};
 
 function fieldVisible(id, p){
   const isDesktop=p=="desktop", isNotebook=p=="notebook", isMobile=p=="mobile", isColetor=p=="coletor", isMonitor=p=="monitor";
   switch(id){
-    case "categoria": return true;
     case "desktopFormato": return isDesktop;
     case "processador": return !isMonitor;
     case "geracao": return !isMonitor;
@@ -536,7 +534,7 @@ function cleanProductPart(v){ return trim(v).replace(/\s+/g," "); }
 
 function profileFromType(v){
   v = String(v||"").toUpperCase();
-  if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION") return "desktop";
+  if (v==="DESKTOP"||v==="MINI PC"||v==="WORKSTATION"||v==="SERVIDOR") return "desktop";
   if (v==="MONITOR") return "monitor";
   if (v==="CELULAR/TABLET"||v==="CELULAR"||v==="TABLET") return "mobile";
   if (v==="COLETOR") return "coletor";
@@ -557,10 +555,18 @@ function equipmentDescription(r){
   const p = profileFromRecord(r), fmt = cleanProductPart(r.desktopFormato), type = cleanProductPart(r.tipoEquipamento);
   if (p==="desktop") return cleanProductPart("DESKTOP "+fmt);
   if (p==="monitor") return "MONITOR";
-  if (p==="mobile") return "CELULAR/TABLET";
+  if (p==="mobile") return type ? type.toUpperCase() : "CELULAR/TABLET";
   if (p==="coletor") return "COLETOR";
   if (type) return type;
   return "NOTEBOOK";
+}
+function tipoEquipamentoLabel(r){
+  // valor cru do cadastro "Tipo de equipamento" - usado no catalogo Comercial,
+  // filtros, dashboard e exportacao por categorias. Registros antigos com
+  // "CELULAR/TABLET" (antes da separacao) continuam mostrando esse valor
+  // historico, sem inventar se era Celular ou Tablet.
+  const t = trim(r && r.tipoEquipamento);
+  return t ? t.toUpperCase() : "";
 }
 function storagePattern(r){
   let cap = cleanProductPart(r.armazenamento); const type = cleanProductPart(r.tipoArmazenamento); const u = cap.toUpperCase();
@@ -845,8 +851,8 @@ async function loadOpcoesAll(){
   refreshAllDSelects();
   refreshFilterSelects();
   buildCategoriaMultiSelects();
-  const catSel = E("categoria");
-  if(catSel && !catSel.dataset.touched) catSel.value = profileDefaultCategoria[activeProfile] || "";
+  const typeSel = E("tipoEquipamento");
+  if(typeSel && !typeSel.dataset.touched) typeSel.value = profileDefaultTipoEquipamento[activeProfile] || "";
 }
 function subscribeOpcoesRealtime(){
   if(!supa) return;
@@ -939,18 +945,34 @@ function buildFormGrid(){
     }
     grid.appendChild(div);
   });
-  // tipoEquipamento drives profile
-  E("tipoEquipamento").addEventListener("change", function(){ setProfile(profileFromType(this.value)); });
+  // tipoEquipamento drives o perfil de checklist. So troca de perfil se o novo
+  // tipo realmente pertencer a outro perfil - impede que alternar entre
+  // Celular e Tablet (mesmo perfil "mobile") reconstrua o checklist e apague
+  // respostas ja marcadas.
+  E("tipoEquipamento").addEventListener("change", function(){
+    const novoPerfil = profileFromType(this.value);
+    if(novoPerfil !== activeProfile) setProfile(novoPerfil);
+  });
 }
 function fillDSelect(fieldId, tipoCampo, keepValue){
   const sel = E(fieldId); if(!sel) return;
   const prev = keepValue!==undefined ? keepValue : sel.value;
+  const prevUpper = String(prev||"").toUpperCase();
   sel.innerHTML = "";
   const optBlank = document.createElement("option"); optBlank.value=""; optBlank.innerText="Selecione"; sel.appendChild(optBlank);
   const list = (opcoesCache[tipoCampo]||[]).filter(o=>o.ativo || o.valor===prev);
+  const hasMatch = list.some(o=>String(o.valor).toUpperCase()===prevUpper);
   list.forEach(o=>{ const opt=document.createElement("option"); opt.value=o.valor; opt.innerText=o.valor+(o.ativo?"":" (inativo)"); sel.appendChild(opt); });
+  if(prev && !hasMatch){
+    // valor historico (registro antigo) que nao bate com nenhuma opcao hoje
+    // cadastrada - preserva ele como esta, sem inventar uma classificacao nova
+    const optLegacy = document.createElement("option"); optLegacy.value=prev; optLegacy.innerText=prev+" (valor historico)"; sel.appendChild(optLegacy);
+  }
   const optNew = document.createElement("option"); optNew.value="__new__"; optNew.innerText="+ Criar nova opcao"; sel.appendChild(optNew);
-  if(prev && list.some(o=>o.valor===prev)) sel.value = prev;
+  if(prev){
+    const matchOpt = Array.prototype.find.call(sel.options, o=>String(o.value).toUpperCase()===prevUpper);
+    if(matchOpt) sel.value = matchOpt.value;
+  }
 }
 function refreshAllDSelects(keepValues){
   techFields.filter(f=>f.type==="dselect").forEach(f=>{
@@ -959,7 +981,7 @@ function refreshAllDSelects(keepValues){
 }
 function onDSelectChange(fieldId, tipoCampo){
   const sel = E(fieldId), newRow = E("new_"+fieldId);
-  if(fieldId==="categoria") sel.dataset.touched = "1";
+  if(fieldId==="tipoEquipamento") sel.dataset.touched = "1";
   if(sel.value === "__new__"){
     newRow.classList.add("show");
     E("newval_"+fieldId).value = "";
@@ -980,6 +1002,11 @@ async function confirmNewOption(fieldId, tipoCampo){
   E(fieldId).value = val;
   E("new_"+fieldId).classList.remove("show");
   refreshFilterSelects();
+  if(fieldId==="tipoEquipamento"){
+    E(fieldId).dataset.touched = "1";
+    const novoPerfil = profileFromType(val);
+    if(novoPerfil !== activeProfile) setProfile(novoPerfil);
+  }
 }
 function updateFieldVisibility(){
   techFields.forEach(f=>{
@@ -1048,9 +1075,8 @@ function updateProgress(){
 }
 function setProfile(p){
   activeProfile = checklistProfiles[p] ? p : "notebook";
-  E("tipoEquipamento").value = checklistProfiles[activeProfile].type;
-  const catSel = E("categoria");
-  if(catSel && !catSel.dataset.touched){ catSel.value = profileDefaultCategoria[activeProfile] || ""; }
+  const typeSel = E("tipoEquipamento");
+  if(typeSel && !typeSel.dataset.touched){ typeSel.value = profileDefaultTipoEquipamento[activeProfile] || ""; }
   buildProfileTabs();
   updateFieldVisibility();
   renderChecklistArea();
@@ -1131,7 +1157,7 @@ function resetForm(){
   techFields.forEach(f=>{ const el=E(f.id); if(el) el.value=""; });
   document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
   allItemKeys.forEach(k=>{ const o=E(k+"Obs"); if(o) o.value=""; });
-  if(E("categoria")) E("categoria").dataset.touched = "";
+  if(E("tipoEquipamento")) E("tipoEquipamento").dataset.touched = "";
   E("timer").innerText="00:00:00";
   E("startBtn").style.display="inline-block";
   E("finishBtn").style.display="none";
@@ -1149,7 +1175,12 @@ function editRecord(id){
   resetFormKeepProfile();
   editId = id;
   setProfile(profileFromRecord(r));
-  techFields.forEach(f=>{ const el=E(f.id); if(el) el.value = r[f.id]||""; });
+  techFields.forEach(f=>{
+    const el=E(f.id); if(!el) return;
+    if(f.type==="dselect"){ fillDSelect(f.id, f.tipoCampo, r[f.id]||""); }
+    else { el.value = r[f.id]||""; }
+  });
+  if(E("tipoEquipamento")) E("tipoEquipamento").dataset.touched = "1";
   setRadio("funcionamento", r.funcionamento||"");
   setRadio("usbFuncionamento", r.usbFuncionamento||"");
   allItemKeys.forEach(k=>{ setRadio(k, r[k]||""); const o=E(k+"Obs"); if(o) o.value=r[k+"Obs"]||""; markDone(k); });
@@ -1167,7 +1198,7 @@ function resetFormKeepProfile(){
   techFields.forEach(f=>{ const el=E(f.id); if(el) el.value=""; });
   document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
   allItemKeys.forEach(k=>{ const o=E(k+"Obs"); if(o) o.value=""; });
-  if(E("categoria")) E("categoria").dataset.touched = "";
+  if(E("tipoEquipamento")) E("tipoEquipamento").dataset.touched = "";
 }
 async function saveEditedRecord(){
   if(!requireLabRole()) return;
@@ -1362,11 +1393,13 @@ var catFilterState = {all:true, set:new Set()};
 var histExportState = {all:true, set:new Set()};
 document.addEventListener("click", ()=>{ document.querySelectorAll(".msel-panel.show").forEach(p=>p.classList.remove("show")); });
 
-function categoriaOptionsList(){ return (opcoesCache["categoria"]||[]).filter(o=>o.ativo).map(o=>o.valor); }
+function categoriaOptionsList(){ return (opcoesCache["tipo_equipamento"]||[]).filter(o=>o.ativo).map(o=>o.valor); }
 function categoriaMatches(state, value){
   if(state.all) return true;
   if(!value) return false;
-  return state.set.has(value);
+  const upper = String(value).toUpperCase();
+  for(const opt of state.set){ if(String(opt).toUpperCase()===upper) return true; }
+  return false;
 }
 function renderMsel(containerId, state, label, onChange){
   const container = E(containerId); if(!container) return;
@@ -1419,8 +1452,8 @@ function renderMsel(containerId, state, label, onChange){
   container.appendChild(panel);
 }
 function buildCategoriaMultiSelects(){
-  renderMsel("mselCategoria", catFilterState, "Categorias", renderCatalog);
-  renderMsel("mselHistExport", histExportState, "Categorias", null);
+  renderMsel("mselCategoria", catFilterState, "Tipo de equipamento", renderCatalog);
+  renderMsel("mselHistExport", histExportState, "Tipo de equipamento", null);
 }
 
 /* =====================================================================
@@ -1440,7 +1473,7 @@ function refreshFilterSelects(){
     sel.value = prev;
   });
 }
-function categoriaOf(r){ return r.categoria || equipmentDescription(r); }
+function categoriaOf(r){ return tipoEquipamentoLabel(r) || equipmentDescription(r); }
 function catalogRecords(){
   const bySelb = new Map();
   allHistory.forEach(r=>{
@@ -1482,7 +1515,7 @@ function clearCatalogFilters(){
   ["catSearch","catSelb","catModelo"].forEach(id=>E(id).value="");
   ["catNota","catMarca","catProcessador","catGeracao","catMemoria","catArmazenamento","catTipoArm","catPlacaVideo","catTela","catSistema"].forEach(id=>E(id).value="");
   catFilterState.all = true; catFilterState.set = new Set();
-  renderMsel("mselCategoria", catFilterState, "Categorias", renderCatalog);
+  renderMsel("mselCategoria", catFilterState, "Tipo de equipamento", renderCatalog);
   renderCatalog();
 }
 function renderCatalog(){
@@ -1529,7 +1562,7 @@ function openDetail(id){
   E("detTitle").innerText = (r.selb||"Equipamento") + " - " + categoriaOf(r);
   E("detSub").innerText = productPattern(r);
   const items = [
-    ["SELB", r.selb], ["SKU", r.sku], ["Categoria", categoriaOf(r)], ["Marca", r.marca], ["Modelo", r.modelo],
+    ["SELB", r.selb], ["SKU", r.sku], ["Tipo de equipamento", categoriaOf(r)], ["Marca", r.marca], ["Modelo", r.modelo],
     ["Processador", processorPattern(r)], ["Geracao", r.geracao], ["Memoria", r.memoria],
     ["Armazenamento", r.armazenamento], ["Tipo armazenamento", r.tipoArmazenamento],
     ["Placa de video", r.placaVideo], ["Tela", r.telaInfo], ["Sistema operacional", r.sistema],
@@ -1555,7 +1588,7 @@ function closeDetail(){ E("detailModal").classList.remove("show"); }
    EXPORTACAO UNIFICADA (multi-categoria, resumida) - Comercial + Laboratorio
    ===================================================================== */
 function unifiedHeaders(){
-  return ["SELB","SKU","Categoria","Marca","Modelo","Processador","Geracao","Memoria","Armazenamento",
+  return ["SELB","SKU","Tipo de equipamento","Marca","Modelo","Processador","Geracao","Memoria","Armazenamento",
     "Tipo armazenamento","Placa de video","Tela","Sistema operacional","Funcionamento","Nota geral","Media",
     "Data da inspecao","Padrao de cadastro"];
 }
@@ -1594,7 +1627,7 @@ function exportCatalogXLSX(){ return exportUnifiedXLSX(catalogFiltered(), "equip
 /* =====================================================================
    ADMINISTRACAO DE OPCOES (ADMIN / LABORATORIO)
    ===================================================================== */
-var adminActiveTipo = "categoria";
+var adminActiveTipo = "tipo_equipamento";
 function buildOptTabs(){
   const wrap = E("optTabs"); if(!wrap) return;
   wrap.innerHTML = "";
