@@ -613,34 +613,72 @@ function productPattern(r){
   const out = config.filter(Boolean);
   return prefix.join(" - ") + (out.length ? " - "+out.join(" ") : "");
 }
+const aestheticItems = ["tampaCima","tampaBaixo","palmRest","gabinete","biometria","estruturaColetor","baseMonitor","carcacaMonitor"];
+
 function gradeRank(g){ if(g==="A")return 4; if(g==="B")return 3; if(g==="C")return 2; return 1; }
 function capGrade(grade,limit){ if(!limit) return grade; return gradeRank(grade)>gradeRank(limit) ? limit : grade; }
 function monitorHasNoUsb(d){
   if (!d) return false;
   return profileFromRecord(d)==="monitor" && String(d.monitorUsbPossui||"").toUpperCase()==="NAO";
 }
-function checklistLimitGrade(d){
-  if (!d) return "";
+
+function applyCommercialRules(baseGrade, d) {
+  if (!d) return baseGrade;
   const p = profileFromRecord(d);
   const items = (checklistProfiles[p]||checklistProfiles.notebook).items;
-  for (let i=0;i<items.length;i++){
+  
+  let hasRelevantD = false;
+  let hasFunctionalC = false;
+  let aestheticCCount = 0;
+  
+  for (let i=0; i<items.length; i++){
     const k = items[i];
-    if (k==="usbMonitor" && monitorHasNoUsb(d)) continue;
-    if (d[k]==="D") return "D";
+    if (k === "limpezaInterna") continue; // IGNORE limpezaInterna completely
+    if (k === "usbMonitor" && monitorHasNoUsb(d)) continue;
+    
+    const val = d[k];
+    if (val === "D") {
+      hasRelevantD = true;
+    } else if (val === "C") {
+      if (aestheticItems.indexOf(k) >= 0) {
+        aestheticCCount++;
+      } else {
+        hasFunctionalC = true;
+      }
+    }
   }
-  return "";
+  
+  if (hasRelevantD) return "D";
+  
+  if (hasFunctionalC) {
+    if (gradeRank(baseGrade) > gradeRank("C")) return "C";
+    return baseGrade;
+  }
+  
+  if (baseGrade === "A") {
+    if (aestheticCCount === 1) return "B";
+    if (aestheticCCount >= 2) return "C";
+    return "A";
+  } else if (baseGrade === "B") {
+    if (aestheticCCount >= 1) return "C";
+    return "B";
+  }
+  
+  return baseGrade;
 }
+
 function qualityGrade(avg,d){
   avg = Number(String(avg||"0").replace(",",".")) || 0;
-  let grade;
-  if (avg>=4.50) grade="A"; else if (avg>=4.00) grade="B"; else if (avg>=3.00) grade="C"; else grade="D";
-  return capGrade(grade, checklistLimitGrade(d));
+  let baseGrade;
+  if (avg>=4.50) baseGrade="A"; else if (avg>=4.00) baseGrade="B"; else if (avg>=3.00) baseGrade="C"; else baseGrade="D";
+  return applyCommercialRules(baseGrade, d);
 }
 function resultQuality(r){ return qualityGrade(r ? r.media : 0, r); }
 function calc(d, itemKeys){
   let total=0, totalWeight=0;
   for (let i=0;i<itemKeys.length;i++){
     const k = itemKeys[i];
+    if (k === "limpezaInterna") continue; // IGNORE limpezaInterna completely
     if ((k==="usbMonitor" && monitorHasNoUsb(d)) || d[k]==="NA") continue;
     total += (score[d[k]]||0) * weights[k];
     totalWeight += weights[k];
