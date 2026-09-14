@@ -611,7 +611,7 @@ function productPattern(r){
     if (p!=="desktop") config.push(cleanProductPart(r.telaInfo));
   }
   const out = config.filter(Boolean);
-  return prefix.join(" - ") + (out.length ? " - "+out.join(" ") : "");
+  return (prefix.join(" - ") + (out.length ? " - "+out.join(" ") : "")).toUpperCase();
 }
 const aestheticItems = ["tampaCima","tampaBaixo","palmRest","gabinete","biometria","estruturaColetor","baseMonitor","carcacaMonitor"];
 
