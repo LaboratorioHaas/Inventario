@@ -598,7 +598,7 @@ function productIdentifier(r){
   return parts.join(" | ");
 }
 function productPattern(r){
-  const type = equipmentDescription(r), prefix = [type,"SELB","ITD","HW"];
+  const type = equipmentDescription(r), prefix = ["SELB","ITD","HW",type];
   const p = profileFromRecord(r);
   const config = [cleanProductPart(r.marca), cleanProductPart(r.modelo)];
   if (p==="monitor") {
