@@ -496,14 +496,14 @@ const techFields = [
   {id:"placaVideo", label:"Placa de video", type:"dselect", tipoCampo:"placa_video"},
   {id:"telaInfo", label:"Tela - especificacao", type:"dselect", tipoCampo:"tela"},
   {id:"sistema", label:"Sistema operacional", type:"dselect", tipoCampo:"sistema_operacional"},
-  {id:"sistemaEdicao", label:"Edicao do sistema", type:"select", options:[["","Selecione"],["PRO","Pro"],["HOME","Home"]]},
+  {id:"sistemaEdicao", label:"Edicao do sistema", type:"dselect", tipoCampo:"sistema_edicao"},
   {id:"fonte", label:"Fonte / carregador", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
   {id:"monitorUsbPossui", label:"Portas USB - possui", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]], onchange:"updateMonitorUsbState"},
   {id:"cameraTeste", label:"Camera testada", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
   {id:"hdmiUsbC", label:"HDMI / USB-C testado", type:"select", options:[["","Selecione"],["SIM","Sim"],["NAO","Nao"]]},
   {id:"bateriaStatus", label:"Bateria", type:"select", options:[["","Selecione"],["BOA","Boa"],["FRACA","Fraca"],["NAO SE APLICA","Nao se aplica"]]}
 ];
-const DYNAMIC_TIPOS = ["tipo_equipamento","marca","processador","geracao","memoria","armazenamento","tipo_armazenamento","placa_video","tela","sistema_operacional"];
+const DYNAMIC_TIPOS = ["tipo_equipamento","marca","processador","geracao","memoria","armazenamento","tipo_armazenamento","placa_video","tela","sistema_operacional","sistema_edicao"];
 const profileDefaultTipoEquipamento = {notebook:"Notebook", desktop:"Desktop", mobile:"Celular", tablet:"Tablet", coletor:"Coletor", monitor:"Monitor", servidor:"Servidor"};
 
 function fieldVisible(id, p){
@@ -872,9 +872,18 @@ function applyRoleUI(){
 
 async function loadHistory(){
   if(!supa) return;
-  const { data, error } = await supa.from("inspecoes").select("payload").eq("deleted", false).order("updated_at_ms", {ascending:false});
-  if(error){ console.error(error); return; }
-  allHistory = (data||[]).map(row=>row.payload);
+  const PAGE = 1000;
+  let all = [], page = 0, done = false;
+  while(!done){
+    const from = page * PAGE, to = from + PAGE - 1;
+    const { data, error } = await supa.from("inspecoes").select("payload").eq("deleted", false).order("updated_at_ms", {ascending:false}).range(from, to);
+    if(error){ console.error(error); return; }
+    const rows = data || [];
+    all = all.concat(rows.map(row=>row.payload));
+    done = rows.length < PAGE;
+    page++;
+  }
+  allHistory = all;
   renderHistory();
   renderDashboard();
   renderCatalog();
@@ -1176,7 +1185,7 @@ async function finishAnalysis(){
   d.selb = d.selb.toUpperCase(); d.sku = d.sku.toUpperCase();
   const errors = validateForm(d);
   if(errors.length){ msgBox("formMsg","Preencha os campos obrigatorios: "+errors.join(", ")+".","err"); return; }
-  if(duplicateSelb(d.selb, null) && !confirm("Ja existe outro registro com este SELB. Deseja salvar mesmo assim?")) return;
+  if(duplicateSelb(d.selb, null) && !confirm("\u26a0\ufe0f SELB JA CATEGORIZADO\n\nO equipamento " + d.selb + " ja possui uma categorizacao registrada no sistema.\n\nDeseja realmente categorizar novamente? O novo registro sera salvo e o anterior continuara no historico.")) return;
   const c = calc(d, checklistProfiles[activeProfile].items);
   const secs = startTime ? Math.floor((Date.now()-startTime)/1000)+elapsedBeforePause : 0;
   const now = new Date();
@@ -1254,7 +1263,7 @@ async function saveEditedRecord(){
   d.selb = d.selb.toUpperCase(); d.sku = d.sku.toUpperCase();
   const errors = validateForm(d);
   if(errors.length){ msgBox("formMsg","Preencha os campos obrigatorios: "+errors.join(", ")+".","err"); return; }
-  if(duplicateSelb(d.selb, editId) && !confirm("Ja existe outro registro com este SELB. Deseja salvar mesmo assim?")) return;
+  if(duplicateSelb(d.selb, editId) && !confirm("\u26a0\ufe0f SELB JA CATEGORIZADO\n\nO equipamento " + d.selb + " ja possui outra categorizacao registrada no sistema.\n\nDeseja salvar mesmo assim?")) return;
   const r = findRecord(editId); if(!r) return;
   const c = calc(d, checklistProfiles[activeProfile].items);
   Object.assign(r, d);
