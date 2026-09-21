@@ -226,7 +226,7 @@ input:checked + .slider:before{transform:translateX(16px);}
 
 <nav class="tabs">
   <button class="tabbtn lab-only" data-tab="nova" onclick="showTab('nova')">Nova analise</button>
-  <button class="tabbtn lab-only" data-tab="historico" onclick="showTab('historico')">Historico</button>
+  <button class="tabbtn" data-tab="historico" onclick="showTab('historico')">Historico</button>
   <button class="tabbtn" data-tab="catalogo" onclick="showTab('catalogo')">Equipamentos categorizados</button>
   <button class="tabbtn lab-only" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
   <button class="tabbtn lab-only" data-tab="importar" onclick="showTab('importar')">Importar historico antigo</button>
@@ -326,7 +326,7 @@ input:checked + .slider:before{transform:translateX(16px);}
     <div class="tablewrap">
       <table>
         <thead><tr>
-          <th>Acoes</th><th>Identificacao</th><th>Padrao de cadastro</th><th>Data</th><th>SELB</th><th>SKU</th>
+          <th class="lab-only">Acoes</th><th>Identificacao</th><th>Padrao de cadastro</th><th>Data</th><th>SELB</th><th>SKU</th>
           <th>Tipo</th><th>Marca</th><th>Modelo</th><th>CPU</th><th>Memoria</th><th>Armaz.</th>
           <th>Sistema</th><th>Func.</th><th>USB</th><th>Media</th><th>Nota</th><th>Duracao</th>
         </tr></thead>
@@ -375,6 +375,11 @@ input:checked + .slider:before{transform:translateX(16px);}
       <div class="fgroup"><label>Tipo de equipamento</label><span class="msel" id="mselCategoria" style="display:block;"></span></div>
       <div class="fgroup"><label>Nota geral</label>
         <select id="catNota" onchange="renderCatalog()"><option value="">Todas</option><option value="A">A - Excelente</option><option value="B">B - Bom</option><option value="C">C - Regular</option><option value="D">D - Ruim</option></select>
+      </div>
+      <div class="fgroup"><label>Funcionamento</label>
+        <select id="catFunc" onchange="renderCatalog()">
+          <option value="">Funcionamento - todos</option><option value="Total">Total</option><option value="Parcial">Parcial</option><option value="Nao liga">Não liga</option>
+        </select>
       </div>
       <div class="fgroup"><label>SELB</label><input type="text" id="catSelb" onkeyup="renderCatalog()"></div>
       <div class="fgroup"><label>Marca</label><select id="catMarca" onchange="renderCatalog()"></select></div>
@@ -1326,8 +1331,9 @@ function renderHistory(){
   h.forEach(r=>{
     const tr = document.createElement("tr");
     const grade = resultQuality(r);
+    const tdAcoes = isLabRole() ? '<td><button class="btn sm" onclick="editRecord(\''+jsArg(r.id)+'\')">Editar</button> <button class="btn sm danger" onclick="deleteRecord(\''+jsArg(r.id)+'\')">Excluir</button></td>' : '';
     tr.innerHTML =
-      '<td><button class="btn sm" onclick="editRecord(\''+jsArg(r.id)+'\')">Editar</button> <button class="btn sm danger" onclick="deleteRecord(\''+jsArg(r.id)+'\')">Excluir</button></td>'+
+      tdAcoes +
       '<td>'+htmlEsc(productIdentifier(r))+'</td>'+
       '<td>'+htmlEsc(productPattern(r))+'</td>'+
       '<td>'+htmlEsc(r.data)+'</td><td>'+htmlEsc(r.selb)+'</td><td>'+htmlEsc(r.sku)+'</td>'+
@@ -1551,9 +1557,11 @@ function catalogFiltered(){
   const proc = E("catProcessador").value, ger = E("catGeracao").value, mem = E("catMemoria").value;
   const arm = E("catArmazenamento").value, tipoArm = E("catTipoArm").value, pv = E("catPlacaVideo").value;
   const tela = E("catTela").value, sist = E("catSistema").value;
+  const func = E("catFunc") ? E("catFunc").value : "";
   return catalogRecords().filter(r=>{
     if(!categoriaMatches(catFilterState, categoriaOf(r))) return false;
     if(nota && resultQuality(r)!==nota) return false;
+    if(func && r.funcionamento!==func) return false;
     if(selb && !String(r.selb||"").toLowerCase().includes(selb)) return false;
     if(marca && r.marca!==marca) return false;
     if(modelo && !String(r.modelo||"").toLowerCase().includes(modelo)) return false;
@@ -1574,7 +1582,7 @@ function catalogFiltered(){
 }
 function clearCatalogFilters(){
   ["catSearch","catSelb","catModelo"].forEach(id=>E(id).value="");
-  ["catNota","catMarca","catProcessador","catGeracao","catMemoria","catArmazenamento","catTipoArm","catPlacaVideo","catTela","catSistema"].forEach(id=>E(id).value="");
+  ["catNota","catMarca","catProcessador","catGeracao","catMemoria","catArmazenamento","catTipoArm","catPlacaVideo","catTela","catSistema", "catFunc"].forEach(id=>{ if(E(id)) E(id).value=""; });
   catFilterState.all = true; catFilterState.set = new Set();
   renderMsel("mselCategoria", catFilterState, "Tipo de equipamento", renderCatalog);
   renderCatalog();
