@@ -121,24 +121,25 @@ a{color:var(--green-dark);}
 .dselect-new.show{display:flex;}
 .dselect-new input{flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
 
-/* multi-select de categorias (compacto) */
-.msel{position:relative;display:inline-block;}
-.msel-btn{border:1px solid var(--border);background:#fff;border-radius:6px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
-.msel-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:10px;z-index:30;min-width:220px;max-height:280px;overflow:auto;}
+/* multi-select compacto */
+.msel{position:relative;display:inline-block;width:100%;}
+.msel-btn{border:1px solid var(--border);background:#fff;border-radius:6px;padding:6px 10px;font-size:12.5px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;height:34px;cursor:pointer;}
+.msel-btn-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.msel-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.15);padding:10px;z-index:90;min-width:230px;max-height:300px;overflow:auto;}
 .msel-panel.show{display:block;}
-.msel-panel label{display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:13px;cursor:pointer;}
+.msel-panel label{display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:12.5px;cursor:pointer;}
 .msel-panel hr{border:none;border-top:1px solid var(--border);margin:6px 0;}
 .msel-actions{display:flex;justify-content:space-between;margin-top:6px;}
 
-/* catalogo comercial */
+/* catalogo comercial / equipamentos categorizados */
 .searchbar{display:flex;gap:10px;margin-bottom:14px;}
 .searchbar input{flex:1;padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;}
-.catalog-grid{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:start;}
-@media (max-width:820px){.catalog-grid{grid-template-columns:1fr;}}
-.filterpanel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:sticky;top:14px;}
-.filterpanel .fgroup{margin-bottom:14px;}
-.filterpanel label{font-size:11.5px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;}
-.filterpanel select,.filterpanel input{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;}
+.catalog-filters{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px;}
+.catalog-filters-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;}
+.catalog-filters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px 14px;align-items:end;}
+.catalog-filters-grid .fgroup{display:flex;flex-direction:column;gap:4px;}
+.catalog-filters-grid label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.catalog-filters-grid input[type=text]{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;height:34px;background:#fff;color:var(--text);}
 .resultrow{cursor:pointer;}
 .resultrow:hover{background:#EFF7F2 !important;}
 
@@ -172,6 +173,19 @@ a{color:var(--green-dark);}
 .slider:before{content:"";position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.15s;}
 input:checked + .slider{background:var(--green);}
 input:checked + .slider:before{transform:translateX(16px);}
+
+/* Higienizacao de dados */
+.hig-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:18px;}
+.hig-control-grid{display:grid;grid-template-columns:1.5fr 1fr 2fr auto;gap:12px;align-items:end;margin-bottom:16px;}
+.var-pill{display:inline-flex;align-items:center;background:#EDF3EF;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--green-dark);margin-left:6px;}
+.var-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px;}
+.var-table th,.var-table td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;}
+.var-table th{background:#F8FAF9;font-weight:600;}
+.var-table tr:hover td{background:#F2F7F4;}
+.modal-large{width:900px;max-width:96vw;}
+.backup-status-tag{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.status-concluido{background:#DFF3E8;color:#0B7A3E;}
+.status-revertido{background:#FBEAE8;color:#7A2E28;}
 </style>
 </head>
 <body>
@@ -231,6 +245,7 @@ input:checked + .slider:before{transform:translateX(16px);}
   <button class="tabbtn lab-only" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
   <button class="tabbtn lab-only" data-tab="importar" onclick="showTab('importar')">Importar historico antigo</button>
   <button class="tabbtn lab-only" data-tab="opcoes" onclick="showTab('opcoes')">Opcoes cadastradas</button>
+  <button class="tabbtn master-only" data-tab="higienizacao" onclick="showTab('higienizacao')">Higienizacao (Master)</button>
 </nav>
 
 <main>
@@ -370,43 +385,49 @@ input:checked + .slider:before{transform:translateX(16px);}
     <input type="text" id="catSearch" placeholder="Busca geral: SELB, SKU, marca, modelo, processador, tela, sistema..." onkeyup="renderCatalog()">
     <button class="btn primary" onclick="exportCatalogXLSX()">Exportar XLSX (filtro atual)</button>
   </div>
-  <div class="catalog-grid">
-    <div class="filterpanel">
-      <div class="fgroup"><label>Tipo de equipamento</label><span class="msel" id="mselCategoria" style="display:block;"></span></div>
-      <div class="fgroup"><label>Nota geral</label>
-        <select id="catNota" onchange="renderCatalog()"><option value="">Todas</option><option value="A">A - Excelente</option><option value="B">B - Bom</option><option value="C">C - Regular</option><option value="D">D - Ruim</option></select>
-      </div>
-      <div class="fgroup"><label>Funcionamento</label>
-        <select id="catFunc" onchange="renderCatalog()">
-          <option value="">Funcionamento - todos</option><option value="Total">Total</option><option value="Parcial">Parcial</option><option value="Nao liga">Não liga</option>
-        </select>
-      </div>
-      <div class="fgroup"><label>SELB</label><input type="text" id="catSelb" onkeyup="renderCatalog()"></div>
-      <div class="fgroup"><label>Marca</label><select id="catMarca" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Modelo</label><input type="text" id="catModelo" onkeyup="renderCatalog()"></div>
-      <div class="fgroup"><label>Processador</label><select id="catProcessador" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Geracao</label><select id="catGeracao" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Memoria</label><select id="catMemoria" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Armazenamento</label><select id="catArmazenamento" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Tipo armazenamento</label><select id="catTipoArm" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Placa de video</label><select id="catPlacaVideo" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Tela</label><select id="catTela" onchange="renderCatalog()"></select></div>
-      <div class="fgroup"><label>Sistema operacional</label><select id="catSistema" onchange="renderCatalog()"></select></div>
-      <button class="btn sm" style="width:100%;" onclick="clearCatalogFilters()">Limpar filtros</button>
+
+  <div class="catalog-filters">
+    <div class="catalog-filters-header">
+      <span class="card-title" style="margin:0;">Filtros de pesquisa</span>
+      <button class="btn sm" onclick="clearCatalogFilters()">Limpar filtros</button>
     </div>
-    <div>
-      <div class="metrics" id="catMetrics" style="margin-bottom:16px;"></div>
-      <div class="hint" id="catCount" style="margin-bottom:8px;"></div>
-      <div class="tablewrap">
-        <table>
-          <thead><tr>
-            <th>SELB</th><th>Tipo de equipamento</th><th>Marca</th><th>Modelo</th><th>Processador</th>
-            <th>Geracao</th><th>Memoria</th><th>Armazenamento</th><th>Tela</th><th>Sistema</th><th>Nota</th>
-          </tr></thead>
-          <tbody id="catalogBody"></tbody>
-        </table>
-      </div>
+    <div class="catalog-filters-grid" id="catalogFiltersGrid">
+      <div class="fgroup" data-fgroup="selb"><label>SELB</label><input type="text" id="catSelb" placeholder="Buscar SELB..." onkeyup="renderCatalog()"></div>
+      <div class="fgroup" data-fgroup="sku"><label>SKU</label><input type="text" id="catSku" placeholder="Buscar SKU..." onkeyup="renderCatalog()"></div>
+      <div class="fgroup" data-fgroup="tipoEquipamento"><label>Tipo de equipamento</label><span class="msel" id="msel_tipoEquipamento"></span></div>
+      <div class="fgroup" data-fgroup="marca"><label>Marca</label><span class="msel" id="msel_marca"></span></div>
+      <div class="fgroup" data-fgroup="modelo"><label>Modelo</label><span class="msel" id="msel_modelo"></span></div>
+      <div class="fgroup" data-fgroup="desktopFormato"><label>Formato desktop</label><span class="msel" id="msel_desktopFormato"></span></div>
+      <div class="fgroup" data-fgroup="processador"><label>Processador</label><span class="msel" id="msel_processador"></span></div>
+      <div class="fgroup" data-fgroup="geracao"><label>Geração processador</label><span class="msel" id="msel_geracao"></span></div>
+      <div class="fgroup" data-fgroup="memoria"><label>Memória</label><span class="msel" id="msel_memoria"></span></div>
+      <div class="fgroup" data-fgroup="armazenamento"><label>Armazenamento</label><span class="msel" id="msel_armazenamento"></span></div>
+      <div class="fgroup" data-fgroup="tipoArmazenamento"><label>Tipo armazenamento</label><span class="msel" id="msel_tipoArmazenamento"></span></div>
+      <div class="fgroup" data-fgroup="placaVideo"><label>Placa de vídeo</label><span class="msel" id="msel_placaVideo"></span></div>
+      <div class="fgroup" data-fgroup="tela"><label>Tela / especificação</label><span class="msel" id="msel_tela"></span></div>
+      <div class="fgroup" data-fgroup="sistema"><label>Sistema operacional</label><span class="msel" id="msel_sistema"></span></div>
+      <div class="fgroup" data-fgroup="sistemaEdicao"><label>Edição do sistema</label><span class="msel" id="msel_sistemaEdicao"></span></div>
+      <div class="fgroup" data-fgroup="fonte"><label>Fonte / carregador</label><span class="msel" id="msel_fonte"></span></div>
+      <div class="fgroup" data-fgroup="cameraTeste"><label>Câmera testada</label><span class="msel" id="msel_cameraTeste"></span></div>
+      <div class="fgroup" data-fgroup="hdmiUsbC"><label>HDMI / USB-C</label><span class="msel" id="msel_hdmiUsbC"></span></div>
+      <div class="fgroup" data-fgroup="bateriaStatus"><label>Bateria</label><span class="msel" id="msel_bateriaStatus"></span></div>
+      <div class="fgroup" data-fgroup="monitorUsbPossui"><label>USB Monitor</label><span class="msel" id="msel_monitorUsbPossui"></span></div>
+      <div class="fgroup" data-fgroup="funcionamento"><label>Funcionamento geral</label><span class="msel" id="msel_funcionamento"></span></div>
+      <div class="fgroup" data-fgroup="usbFuncionamento"><label>USB funcionamento</label><span class="msel" id="msel_usbFuncionamento"></span></div>
+      <div class="fgroup" data-fgroup="nota"><label>Nota geral</label><span class="msel" id="msel_nota"></span></div>
     </div>
+  </div>
+
+  <div class="metrics" id="catMetrics" style="margin-bottom:16px;"></div>
+  <div class="hint" id="catCount" style="margin-bottom:8px;"></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>SELB</th><th>Tipo de equipamento</th><th>Marca</th><th>Modelo</th><th>Processador</th>
+        <th>Geracao</th><th>Memoria</th><th>Armazenamento</th><th>Tela</th><th>Sistema</th><th>Nota</th>
+      </tr></thead>
+      <tbody id="catalogBody"></tbody>
+    </table>
   </div>
 </div>
 
@@ -420,6 +441,147 @@ input:checked + .slider:before{transform:translateX(16px);}
     <div class="opt-add">
       <input type="text" id="optNewValue" placeholder="Nova opcao...">
       <button class="btn primary" onclick="adminAddOption()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HIGIENIZACAO / PADRONIZACAO ===================== -->
+<div class="view" id="view-higienizacao">
+  <div class="card">
+    <div class="toprow">
+      <div>
+        <div class="card-title" style="margin-bottom:2px;">Higienizacao e Padronizacao de Dados</div>
+        <div class="hint">Ferramenta Master para correcao e padronizacao em massa diretamente no Supabase.</div>
+      </div>
+      <div>
+        <button class="btn" onclick="openBackupsModal()">💾 Historico de Backups e Restauracao</button>
+      </div>
+    </div>
+
+    <!-- Filtros de Busca -->
+    <div class="catalog-filters" style="margin-top:14px;">
+      <div class="catalog-filters-header">
+        <span style="font-weight:700;font-size:13px;color:var(--green-dark);">1. Filtrar registros</span>
+        <button class="btn sm" onclick="clearHigFilters()">Limpar filtros</button>
+      </div>
+      <div class="catalog-filters-grid" id="higFiltersGrid">
+        <div class="fgroup"><label>Busca geral</label><input type="text" id="higSearch" placeholder="SELB, SKU, modelo..." oninput="onHigFilterChange()"></div>
+        <div class="fgroup"><label>SELB (exato/texto)</label><input type="text" id="higSelb" placeholder="Filtrar SELB..." oninput="onHigFilterChange()"></div>
+        <div class="fgroup"><label>SKU (exato/texto)</label><input type="text" id="higSku" placeholder="Filtrar SKU..." oninput="onHigFilterChange()"></div>
+        <div class="fgroup" data-fgroup="tipoEquipamento"><label>Tipo de equipamento</label><span class="msel" id="msel_hig_tipoEquipamento"></span></div>
+        <div class="fgroup" data-fgroup="marca"><label>Marca</label><span class="msel" id="msel_hig_marca"></span></div>
+        <div class="fgroup" data-fgroup="modelo"><label>Modelo</label><span class="msel" id="msel_hig_modelo"></span></div>
+        <div class="fgroup" data-fgroup="processador"><label>Processador</label><span class="msel" id="msel_hig_processador"></span></div>
+        <div class="fgroup" data-fgroup="geracao"><label>Geracao</label><span class="msel" id="msel_hig_geracao"></span></div>
+        <div class="fgroup" data-fgroup="memoria"><label>Memoria</label><span class="msel" id="msel_hig_memoria"></span></div>
+        <div class="fgroup" data-fgroup="armazenamento"><label>Armazenamento</label><span class="msel" id="msel_hig_armazenamento"></span></div>
+        <div class="fgroup" data-fgroup="tipoArmazenamento"><label>Tipo Armazenamento</label><span class="msel" id="msel_hig_tipoArmazenamento"></span></div>
+        <div class="fgroup" data-fgroup="placaVideo"><label>Placa de Video</label><span class="msel" id="msel_hig_placaVideo"></span></div>
+        <div class="fgroup" data-fgroup="tela"><label>Tela / Especificacao</label><span class="msel" id="msel_hig_tela"></span></div>
+        <div class="fgroup" data-fgroup="sistema"><label>Sistema Operacional</label><span class="msel" id="msel_hig_sistema"></span></div>
+        <div class="fgroup" data-fgroup="sistemaEdicao"><label>Edicao Sistema</label><span class="msel" id="msel_hig_sistemaEdicao"></span></div>
+        <div class="fgroup" data-fgroup="desktopFormato"><label>Formato Desktop</label><span class="msel" id="msel_hig_desktopFormato"></span></div>
+        <div class="fgroup" data-fgroup="fonte"><label>Fonte / Carregador</label><span class="msel" id="msel_hig_fonte"></span></div>
+        <div class="fgroup" data-fgroup="cameraTeste"><label>Camera Testada</label><span class="msel" id="msel_hig_cameraTeste"></span></div>
+        <div class="fgroup" data-fgroup="hdmiUsbC"><label>HDMI / USB-C</label><span class="msel" id="msel_hig_hdmiUsbC"></span></div>
+        <div class="fgroup" data-fgroup="bateriaStatus"><label>Bateria</label><span class="msel" id="msel_hig_bateriaStatus"></span></div>
+        <div class="fgroup" data-fgroup="funcionamento"><label>Funcionamento Geral</label><span class="msel" id="msel_hig_funcionamento"></span></div>
+        <div class="fgroup" data-fgroup="usbFuncionamento"><label>USB Funcionamento</label><span class="msel" id="msel_hig_usbFuncionamento"></span></div>
+        <div class="fgroup" data-fgroup="nota"><label>Nota Geral</label><span class="msel" id="msel_hig_nota"></span></div>
+      </div>
+    </div>
+
+    <!-- Controle de Campo e Variacoes -->
+    <div class="hig-box">
+      <span style="font-weight:700;font-size:13px;color:var(--green-dark);display:block;margin-bottom:12px;">2. Selecionar campo e encontrar variacoes existentes</span>
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="field" style="min-width:250px;">
+          <label>Campo para padronizacao</label>
+          <select id="higTargetField" onchange="onHigTargetFieldChange()">
+            <option value="telaInfo">Tela / Especificacao (telaInfo)</option>
+            <option value="processador">Processador (processador)</option>
+            <option value="geracao">Geracao do processador (geracao)</option>
+            <option value="memoria">Memoria (memoria)</option>
+            <option value="armazenamento">Armazenamento (armazenamento)</option>
+            <option value="tipoArmazenamento">Tipo de Armazenamento (tipoArmazenamento)</option>
+            <option value="marca">Marca (marca)</option>
+            <option value="modelo">Modelo (modelo)</option>
+            <option value="sistema">Sistema Operacional (sistema)</option>
+            <option value="sistemaEdicao">Edicao do Sistema (sistemaEdicao)</option>
+            <option value="placaVideo">Placa de Video (placaVideo)</option>
+            <option value="desktopFormato">Formato Desktop (desktopFormato)</option>
+            <option value="fonte">Fonte / Carregador (fonte)</option>
+            <option value="cameraTeste">Camera Testada (cameraTeste)</option>
+            <option value="hdmiUsbC">HDMI / USB-C (hdmiUsbC)</option>
+            <option value="bateriaStatus">Bateria (bateriaStatus)</option>
+            <option value="funcionamento">Funcionamento Geral (funcionamento)</option>
+            <option value="usbFuncionamento">USB Funcionamento (usbFuncionamento)</option>
+            <option value="tipoEquipamento">Tipo de Equipamento (tipoEquipamento)</option>
+          </select>
+        </div>
+        <button class="btn primary" onclick="scanHigVariacoes()">🔍 Encontrar variacoes nos registros filtrados</button>
+      </div>
+
+      <!-- Tabela de Variacoes Encontradas -->
+      <div id="higVariacoesWrapper" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-weight:700;font-size:12.5px;">Variacoes encontradas (marque as que serao substituidas):</span>
+          <span class="hint" id="higVariacoesCount"></span>
+        </div>
+        <div class="tablewrap" style="max-height:220px;overflow:auto;">
+          <table class="var-table">
+            <thead>
+              <tr>
+                <th style="width:36px;"><input type="checkbox" id="higVarCheckAll" onchange="toggleAllHigVariacoes(this.checked)"></th>
+                <th>Valor Atual Encontrado</th>
+                <th style="width:120px;">Ocorrencias</th>
+              </tr>
+            </thead>
+            <tbody id="higVariacoesBody"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:16px;background:#F8FAF9;border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="field" style="flex:1;min-width:280px;">
+            <label style="color:var(--green-dark);font-weight:700;">Padronizar os valores selecionados para:</label>
+            <input type="text" id="higNewValue" placeholder="Digite o novo valor padronizado...">
+          </div>
+          <div class="actions">
+            <button class="btn primary" onclick="abrirConfirmacaoHigienizacao()">🔄 Aplicar alteracao em massa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Equipamentos Encontrados -->
+    <div id="higRecordsWrapper" style="display:none;margin-top:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span style="font-weight:700;font-size:13px;color:var(--green-dark);">3. Equipamentos que serao alterados</span>
+          <div class="hint" id="higRecordsCount">0 equipamentos selecionados</div>
+        </div>
+        <div class="actions">
+          <button class="btn sm" onclick="selecionarTodosHigRecords(true)">Marcar todos</button>
+          <button class="btn sm" onclick="selecionarTodosHigRecords(false)">Desmarcar todos</button>
+        </div>
+      </div>
+
+      <div class="tablewrap" style="max-height:450px;overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;"><input type="checkbox" id="higRecordsCheckAll" onchange="toggleAllHigRecords(this.checked)"></th>
+              <th>SELB</th>
+              <th>SKU</th>
+              <th>Tipo</th>
+              <th>Modelo</th>
+              <th id="higThCampo">Valor Atual</th>
+              <th>Data Inspecao</th>
+            </tr>
+          </thead>
+          <tbody id="higRecordsBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -452,6 +614,95 @@ input:checked + .slider:before{transform:translateX(16px);}
     <div class="actions" style="margin-top:16px;justify-content:flex-end;">
       <button class="btn" onclick="closeConfig()">Cancelar</button>
       <button class="btn primary" onclick="saveConfig()">Salvar e conectar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL CONFIRMAR HIGIENIZACAO ===================== -->
+<div class="modal-bg2" id="modalConfirmHig">
+  <div class="modal2">
+    <button class="close2" onclick="fecharModal('modalConfirmHig')">&times;</button>
+    <h2 style="color:var(--amber);">⚠️ Confirmacao de Alteracao em Massa</h2>
+    <div class="modal-sub">Revise os detalhes da operacao antes de confirmar a aplicacao no banco.</div>
+    <div style="background:#FFF9EB;border:1px solid #F7E0A5;border-radius:8px;padding:14px;margin-bottom:16px;">
+      <p style="margin:0 0 8px;font-size:13.5px;">Voce esta prestes a alterar <strong id="modalHigCount">0</strong> equipamento(s).</p>
+      <div style="font-size:12.5px;line-height:1.6;">
+        <div><strong>Campo:</strong> <span id="modalHigCampo"></span></div>
+        <div><strong>Valores que serao substituidos:</strong> <span id="modalHigOldValues"></span></div>
+        <div><strong>Novo valor padronizado:</strong> <span id="modalHigNewValue" style="color:var(--green-dark);font-weight:700;"></span></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:18px;">
+      <div>✓ <strong>Backup automatico:</strong> Salvo no banco de dados antes da alteracao na mesma transacao.</div>
+      <div>✓ <strong>Validacao de concorrencia:</strong> Registros alterados por terceiros durante este processo serao preservados.</div>
+      <div>✓ <strong>Auditoria individual:</strong> Registrado linha a linha para cada equipamento alterado.</div>
+      <div>✓ <strong>Transacao unica:</strong> Se qualquer erro ocorrer, tudo e revertido (sem alteracoes parciais).</div>
+    </div>
+    <div class="actions" style="justify-content:flex-end;">
+      <button class="btn" onclick="fecharModal('modalConfirmHig')">Cancelar</button>
+      <button class="btn primary" id="btnConfirmarHigExec" onclick="executarHigienizacao()">Confirmar e Aplicar no Banco</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL RESULTADO HIGIENIZACAO ===================== -->
+<div class="modal-bg2" id="modalResultHig">
+  <div class="modal2" style="width:500px;">
+    <button class="close2" onclick="fecharModal('modalResultHig')">&times;</button>
+    <h2 id="modalResultHigTitle">Operacao Concluida</h2>
+    <div class="modal-sub" id="modalResultHigSub">Resultado do processamento no banco:</div>
+    <div style="margin:16px 0;font-size:13.5px;line-height:1.7;" id="modalResultHigBody"></div>
+    <div class="actions" style="justify-content:flex-end;">
+      <button class="btn primary" onclick="fecharModal('modalResultHig')">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL HISTORICO DE BACKUPS ===================== -->
+<div class="modal-bg2" id="modalBackupsHig">
+  <div class="modal2 modal-large">
+    <button class="close2" onclick="fecharModal('modalBackupsHig')">&times;</button>
+    <h2>💾 Historico de Backups e Restauracao</h2>
+    <div class="modal-sub">Lista de lotes gerados antes de alteracoes e restauracoes. Exporte para XLSX ou reverta registros.</div>
+    <div class="tablewrap" style="max-height:400px;overflow:auto;margin-bottom:16px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Usuario</th>
+            <th>Itens</th>
+            <th>Campo</th>
+            <th>Novo Valor</th>
+            <th>Status</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="backupsTableBody">
+          <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Carregando backups...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="actions" style="justify-content:space-between;align-items:center;">
+      <button class="btn sm" onclick="carregarHistoricoBackups()">🔄 Atualizar lista</button>
+      <button class="btn" onclick="fecharModal('modalBackupsHig')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL CONFIRMAR RESTAURACAO ===================== -->
+<div class="modal-bg2" id="modalConfirmRestauracao">
+  <div class="modal2">
+    <button class="close2" onclick="fecharModal('modalConfirmRestauracao')">&times;</button>
+    <h2 id="restauracaoTitle">Confirmar Restauracao</h2>
+    <div class="modal-sub" id="restauracaoSub"></div>
+    <div id="restauracaoAlertBox" style="border-radius:8px;padding:14px;margin-bottom:16px;"></div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:18px;">
+      <div>✓ <strong>Novo backup de seguranca:</strong> O estado atual de cada registro sera fotografado antes de restaurar.</div>
+      <div>✓ <strong>Auditoria:</strong> A reversao sera registrada na tabela de auditoria com lote proprio.</div>
+    </div>
+    <div class="actions" style="justify-content:flex-end;">
+      <button class="btn" onclick="fecharModal('modalConfirmRestauracao')">Cancelar</button>
+      <button class="btn primary" id="btnExecRestauracao">Confirmar Restauracao</button>
     </div>
   </div>
 </div>
@@ -873,6 +1124,8 @@ function requireLabRole(){
 function applyRoleUI(){
   document.querySelectorAll(".lab-only").forEach(el=> el.classList.toggle("hidden-role", !isLabRole()));
   document.querySelectorAll(".admin-only").forEach(el=> el.classList.toggle("hidden-role", currentRole!=="ADMIN"));
+  const isMaster = currentUser?.email === 'lucas_pietroski@hotmail.com';
+  document.querySelectorAll(".master-only").forEach(el=> el.classList.toggle("hidden-role", !isMaster));
 }
 
 async function loadHistory(){
@@ -889,6 +1142,7 @@ async function loadHistory(){
     page++;
   }
   allHistory = all;
+  buildCatalogMultiSelects();
   renderHistory();
   renderDashboard();
   renderCatalog();
@@ -946,8 +1200,9 @@ function showTab(tab){
   document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
   E("view-"+tab).classList.add("active");
   document.querySelector('.tabbtn[data-tab="'+tab+'"]').classList.add("active");
-  if(tab==="catalogo") renderCatalog();
+  if(tab==="catalogo"){ buildCatalogMultiSelects(); renderCatalog(); }
   if(tab==="opcoes"){ buildOptTabs(); renderAdminOptions(); }
+  if(tab==="higienizacao"){ initHigienizacaoTab(); }
 }
 
 /* =====================================================================
@@ -1454,92 +1709,341 @@ function downloadBlob(content, filename, mime){
 }
 
 /* =====================================================================
-   MULTI-SELECT COMPACTO (categorias)
+   MULTI-SELECT COMPACTO & FILTROS DO CATALOGO
    ===================================================================== */
-var catFilterState = {all:true, set:new Set()};
 var histExportState = {all:true, set:new Set()};
-document.addEventListener("click", ()=>{ document.querySelectorAll(".msel-panel.show").forEach(p=>p.classList.remove("show")); });
 
-function categoriaOptionsList(){ return (opcoesCache["tipo_equipamento"]||[]).filter(o=>o.ativo).map(o=>o.valor); }
-function categoriaMatches(state, value){
-  if(state.all) return true;
-  if(!value) return false;
-  const upper = String(value).toUpperCase();
-  for(const opt of state.set){ if(String(opt).toUpperCase()===upper) return true; }
+var catalogFilterStates = {
+  categoria: {all:true, set:new Set()},
+  nota: {all:true, set:new Set()},
+  marca: {all:true, set:new Set()},
+  modelo: {all:true, set:new Set()},
+  processador: {all:true, set:new Set()},
+  geracao: {all:true, set:new Set()},
+  memoria: {all:true, set:new Set()},
+  armazenamento: {all:true, set:new Set()},
+  tipoArmazenamento: {all:true, set:new Set()},
+  placaVideo: {all:true, set:new Set()},
+  tela: {all:true, set:new Set()},
+  sistema: {all:true, set:new Set()},
+  sistemaEdicao: {all:true, set:new Set()},
+  desktopFormato: {all:true, set:new Set()},
+  fonte: {all:true, set:new Set()},
+  cameraTeste: {all:true, set:new Set()},
+  hdmiUsbC: {all:true, set:new Set()},
+  bateriaStatus: {all:true, set:new Set()},
+  monitorUsbPossui: {all:true, set:new Set()},
+  funcionamento: {all:true, set:new Set()},
+  usbFuncionamento: {all:true, set:new Set()}
+};
+
+// alias de compatibilidade para exportacao
+var catFilterState = catalogFilterStates.categoria;
+
+document.addEventListener("click", ()=>{
+  document.querySelectorAll(".msel-panel.show").forEach(p=>p.classList.remove("show"));
+});
+
+function categoriaOptionsList(){
+  return (opcoesCache["tipo_equipamento"]||[]).filter(o=>o.ativo).map(o=>o.valor);
+}
+
+function getCatalogModelOptions(){
+  const set = new Set();
+  catalogRecords().forEach(r => {
+    if(!categoriaMatches(catalogFilterStates.categoria, categoriaOf(r))) return;
+    const m = trim(r.modelo);
+    if(m) set.add(m);
+  });
+  if(!set.size){
+    catalogRecords().forEach(r => { const m = trim(r.modelo); if(m) set.add(m); });
+  }
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+
+function getFieldOptions(opcoesKey, recordField){
+  const set = new Set((opcoesCache[opcoesKey]||[]).filter(o=>o.ativo).map(o=>o.valor));
+  if(recordField){
+    catalogRecords().forEach(r=>{
+      const v = trim(r[recordField]);
+      if(v) set.add(v);
+    });
+  }
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+
+function getActiveCatalogProfiles(){
+  const state = catalogFilterStates.categoria;
+  if(state.all || !state.set.size){
+    return new Set(profileOrder);
+  }
+  const set = new Set();
+  state.set.forEach(cat => {
+    set.add(profileFromType(cat));
+  });
+  return set;
+}
+
+function isFieldRelevantForActiveProfiles(fieldId){
+  const activeProfiles = getActiveCatalogProfiles();
+  for(const p of activeProfiles){
+    if(fieldId === "desktopFormato") { if(p === "desktop" || p === "servidor") return true; }
+    else if(fieldId === "processador" || fieldId === "geracao" || fieldId === "armazenamento" || fieldId === "sistema") { if(p !== "monitor") return true; }
+    else if(fieldId === "memoria" || fieldId === "tipoArmazenamento" || fieldId === "placaVideo" || fieldId === "sistemaEdicao" || fieldId === "hdmiUsbC") { if(p === "notebook" || p === "desktop" || p === "servidor") return true; }
+    else if(fieldId === "tela") { if(p === "notebook" || p === "mobile" || p === "tablet" || p === "coletor" || p === "monitor") return true; }
+    else if(fieldId === "cameraTeste") { if(p === "notebook" || p === "mobile" || p === "tablet") return true; }
+    else if(fieldId === "bateriaStatus") { if(p === "notebook" || p === "mobile" || p === "tablet" || p === "coletor") return true; }
+    else if(fieldId === "monitorUsbPossui") { if(p === "monitor") return true; }
+    else if(fieldId === "funcionamento") { if(p !== "monitor") return true; }
+    else if(fieldId === "usbFuncionamento") { if(p === "notebook" || p === "desktop") return true; }
+    else return true;
+  }
   return false;
 }
-function renderMsel(containerId, state, label, onChange){
+
+function updateCatalogFilterVisibility(){
+  const filterGroups = document.querySelectorAll("#catalogFiltersGrid [data-fgroup]");
+  filterGroups.forEach(el => {
+    const fieldId = el.getAttribute("data-fgroup");
+    const visible = isFieldRelevantForActiveProfiles(fieldId);
+    el.style.display = visible ? "flex" : "none";
+  });
+}
+
+function categoriaMatches(state, value){
+  return multiSelectMatches(state, value);
+}
+
+function multiSelectMatches(state, value){
+  if(!state || state.all) return true;
+  if(!state.set || state.set.size === 0) return false;
+  if(value == null || value === "") return false;
+  const upper = String(value).trim().toUpperCase();
+  for(const opt of state.set){
+    if(String(opt).trim().toUpperCase() === upper) return true;
+  }
+  return false;
+}
+
+function renderMultiSelect(containerId, state, label, options, onChange){
   const container = E(containerId); if(!container) return;
-  const options = categoriaOptionsList();
+  const wasOpen = container.querySelector(".msel-panel.show") !== null;
   container.innerHTML = "";
-  const btn = document.createElement("button"); btn.type="button"; btn.className="msel-btn";
-  const labelText = state.all ? (label+": Todas") : (state.set.size ? (label+": "+state.set.size+" selecionada"+(state.set.size>1?"s":"") ) : (label+": nenhuma"));
-  btn.innerText = labelText+" \u25BE";
-  const panel = document.createElement("div"); panel.className="msel-panel";
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "msel-btn";
+  
+  const normOpts = options.map(o => Array.isArray(o) ? {val:o[0], label:o[1]} : {val:o, label:o});
+  const optValues = normOpts.map(o => o.val);
+
+  function updateButtonLabel(){
+    let labelText = label + ": Todas";
+    if(!state.all){
+      if(state.set.size === 0) labelText = label + ": Nenhuma";
+      else if(state.set.size === 1) {
+        const singleVal = Array.from(state.set)[0];
+        const found = normOpts.find(o => String(o.val).toUpperCase() === String(singleVal).toUpperCase());
+        labelText = label + ": " + (found ? found.label : singleVal);
+      } else {
+        labelText = label + ": " + state.set.size + " sel.";
+      }
+    }
+    btn.innerHTML = '<span class="msel-btn-text">'+htmlEsc(labelText)+'</span><span>&#9662;</span>';
+    btn.title = state.all ? (label+": Todas") : (label+": "+Array.from(state.set).join(", "));
+  }
+
+  updateButtonLabel();
+  
+  const panel = document.createElement("div"); panel.className = "msel-panel" + (wasOpen ? " show" : "");
+  panel.onclick = (e) => e.stopPropagation();
 
   const allLabel = document.createElement("label");
-  const allCb = document.createElement("input"); allCb.type="checkbox"; allCb.checked = state.all;
-  allCb.onchange = ()=>{
-    state.all = allCb.checked;
-    state.set = allCb.checked ? new Set(options) : new Set();
-    renderMsel(containerId, state, label, onChange);
-    if(onChange) onChange();
-  };
+  const allCb = document.createElement("input"); allCb.type = "checkbox"; allCb.checked = state.all;
   allLabel.appendChild(allCb); allLabel.appendChild(document.createTextNode(" Selecionar todas"));
+
+  const searchActions = document.createElement("div");
+  searchActions.style.cssText = "display:none;justify-content:space-between;align-items:center;padding:4px 0 6px;margin-bottom:6px;border-bottom:1px dashed var(--border);font-size:11.5px;";
+  
+  const btnSelectFiltered = document.createElement("button");
+  btnSelectFiltered.type = "button";
+  btnSelectFiltered.className = "linklike";
+  btnSelectFiltered.style.cssText = "font-weight:700;color:var(--green-dark);font-size:11.5px;";
+  
+  const btnDeselectFiltered = document.createElement("button");
+  btnDeselectFiltered.type = "button";
+  btnDeselectFiltered.className = "linklike";
+  btnDeselectFiltered.style.cssText = "color:var(--muted);font-size:11.5px;";
+  btnDeselectFiltered.innerText = "Desmarcar";
+
+  searchActions.appendChild(btnSelectFiltered);
+  searchActions.appendChild(btnDeselectFiltered);
+
+  let currentFilteredValues = [];
+
+  if(normOpts.length > 7){
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = "Filtrar opcoes...";
+    searchInput.style.cssText = "width:100%;padding:4px 8px;margin-bottom:6px;font-size:12px;border:1px solid var(--border);border-radius:4px;";
+    searchInput.onclick = (e) => e.stopPropagation();
+    searchInput.oninput = (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      currentFilteredValues = [];
+      optionItems.forEach(({ lab, opt }) => {
+        const text = (opt.label + " " + opt.val).toLowerCase();
+        const matches = text.includes(q);
+        lab.style.display = matches ? "flex" : "none";
+        if(matches) currentFilteredValues.push(opt.val);
+      });
+      if(q.length > 0){
+        searchActions.style.display = "flex";
+        btnSelectFiltered.innerText = `☑ Marcar filtradas (${currentFilteredValues.length})`;
+      } else {
+        searchActions.style.display = "none";
+      }
+    };
+    panel.appendChild(searchInput);
+    panel.appendChild(searchActions);
+  }
+
   panel.appendChild(allLabel);
   panel.appendChild(document.createElement("hr"));
 
-  options.forEach(opt=>{
+  const optionItems = [];
+
+  normOpts.forEach(opt=>{
     const lab = document.createElement("label");
-    const cb = document.createElement("input"); cb.type="checkbox";
-    cb.checked = state.all || state.set.has(opt);
+    lab.className = "msel-opt-label";
+    const cb = document.createElement("input"); cb.type = "checkbox";
+    cb.checked = state.all || state.set.has(opt.val);
+    
     cb.onchange = ()=>{
-      if(state.all){ state.all=false; state.set = new Set(options); }
-      if(cb.checked) state.set.add(opt); else state.set.delete(opt);
-      if(state.set.size===options.length) state.all = true;
-      renderMsel(containerId, state, label, onChange);
+      if(state.all){
+        state.all = false;
+        state.set = new Set(optValues);
+      }
+      if(cb.checked) state.set.add(opt.val);
+      else state.set.delete(opt.val);
+
+      if(state.set.size === optValues.length) state.all = true;
+      allCb.checked = state.all;
+      updateButtonLabel();
       if(onChange) onChange();
     };
-    lab.appendChild(cb); lab.appendChild(document.createTextNode(" "+opt));
+
+    lab.appendChild(cb);
+    lab.appendChild(document.createTextNode(" " + opt.label));
     panel.appendChild(lab);
+    optionItems.push({ lab, opt, cb });
   });
-  const actions = document.createElement("div"); actions.className="msel-actions";
-  const clearBtn = document.createElement("button"); clearBtn.className="linklike"; clearBtn.type="button"; clearBtn.innerText="Limpar selecao";
-  clearBtn.onclick = ()=>{ state.all=false; state.set=new Set(); renderMsel(containerId, state, label, onChange); if(onChange) onChange(); };
+
+  allCb.onchange = ()=>{
+    state.all = allCb.checked;
+    state.set = allCb.checked ? new Set(optValues) : new Set();
+    optionItems.forEach(({ cb }) => { cb.checked = state.all; });
+    updateButtonLabel();
+    if(onChange) onChange();
+  };
+
+  btnSelectFiltered.onclick = ()=>{
+    if(state.all){
+      return;
+    }
+    currentFilteredValues.forEach(val => state.set.add(val));
+    if(state.set.size === optValues.length) state.all = true;
+    allCb.checked = state.all;
+    optionItems.forEach(({ opt, cb }) => {
+      if(currentFilteredValues.includes(opt.val)) cb.checked = true;
+    });
+    updateButtonLabel();
+    if(onChange) onChange();
+  };
+
+  btnDeselectFiltered.onclick = ()=>{
+    if(state.all){
+      state.all = false;
+      state.set = new Set(optValues);
+    }
+    currentFilteredValues.forEach(val => state.set.delete(val));
+    allCb.checked = false;
+    optionItems.forEach(({ opt, cb }) => {
+      if(currentFilteredValues.includes(opt.val)) cb.checked = false;
+    });
+    updateButtonLabel();
+    if(onChange) onChange();
+  };
+  
+  const actions = document.createElement("div"); actions.className = "msel-actions";
+  const clearBtn = document.createElement("button"); clearBtn.className = "linklike"; clearBtn.type = "button"; clearBtn.innerText = "Limpar selecao";
+  clearBtn.onclick = ()=>{
+    state.all = false;
+    state.set = new Set();
+    allCb.checked = false;
+    optionItems.forEach(({ cb }) => { cb.checked = false; });
+    updateButtonLabel();
+    if(onChange) onChange();
+  };
   actions.appendChild(clearBtn);
   panel.appendChild(actions);
 
   btn.onclick = (e)=>{
     e.stopPropagation();
-    const wasOpen = panel.classList.contains("show");
+    const wasPanelOpen = panel.classList.contains("show");
     document.querySelectorAll(".msel-panel.show").forEach(p=>p.classList.remove("show"));
-    if(!wasOpen) panel.classList.add("show");
+    if(!wasPanelOpen){
+      panel.classList.add("show");
+      const rect = panel.getBoundingClientRect();
+      if(rect.right > window.innerWidth - 10){
+        panel.style.left = "auto";
+        panel.style.right = "0";
+      } else {
+        panel.style.left = "0";
+        panel.style.right = "auto";
+      }
+    }
   };
   container.appendChild(btn);
   container.appendChild(panel);
 }
-function buildCategoriaMultiSelects(){
-  renderMsel("mselCategoria", catFilterState, "Tipo de equipamento", renderCatalog);
-  renderMsel("mselHistExport", histExportState, "Tipo de equipamento", null);
+
+function onCategoriaFilterChange(){
+  updateCatalogFilterVisibility();
+  renderMultiSelect("msel_modelo", catalogFilterStates.modelo, "Modelo", getCatalogModelOptions(), renderCatalog);
+  renderCatalog();
 }
 
-/* =====================================================================
-   FILTROS DO CATALOGO COMERCIAL
-   ===================================================================== */
-function refreshFilterSelects(){
-  const map = {catMarca:"marca", catProcessador:"processador", catGeracao:"geracao", catMemoria:"memoria",
-    catArmazenamento:"armazenamento", catTipoArm:"tipo_armazenamento", catPlacaVideo:"placa_video",
-    catTela:"tela", catSistema:"sistema_operacional"};
-  Object.keys(map).forEach(selId=>{
-    const sel = E(selId); if(!sel) return;
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">Todas</option>';
-    (opcoesCache[map[selId]]||[]).filter(o=>o.ativo).forEach(o=>{
-      const opt = document.createElement("option"); opt.value=o.valor; opt.innerText=o.valor; sel.appendChild(opt);
-    });
-    sel.value = prev;
-  });
+function buildCatalogMultiSelects(){
+  renderMultiSelect("mselHistExport", histExportState, "Tipo de equipamento", categoriaOptionsList(), null);
+  renderMultiSelect("msel_tipoEquipamento", catalogFilterStates.categoria, "Tipo", categoriaOptionsList(), onCategoriaFilterChange);
+  renderMultiSelect("msel_marca", catalogFilterStates.marca, "Marca", getFieldOptions("marca", "marca"), renderCatalog);
+  renderMultiSelect("msel_modelo", catalogFilterStates.modelo, "Modelo", getCatalogModelOptions(), renderCatalog);
+  renderMultiSelect("msel_desktopFormato", catalogFilterStates.desktopFormato, "Formato", [["MICRO","Micro"],["SLIM","Slim"],["FULL TOWER","Full tower"]], renderCatalog);
+  renderMultiSelect("msel_processador", catalogFilterStates.processador, "Processador", getFieldOptions("processador", "processador"), renderCatalog);
+  renderMultiSelect("msel_geracao", catalogFilterStates.geracao, "Geração", getFieldOptions("geracao", "geracao"), renderCatalog);
+  renderMultiSelect("msel_memoria", catalogFilterStates.memoria, "Memória", getFieldOptions("memoria", "memoria"), renderCatalog);
+  renderMultiSelect("msel_armazenamento", catalogFilterStates.armazenamento, "Armazenamento", getFieldOptions("armazenamento", "armazenamento"), renderCatalog);
+  renderMultiSelect("msel_tipoArmazenamento", catalogFilterStates.tipoArmazenamento, "Tipo Arm.", getFieldOptions("tipo_armazenamento", "tipoArmazenamento"), renderCatalog);
+  renderMultiSelect("msel_placaVideo", catalogFilterStates.placaVideo, "Placa Vídeo", getFieldOptions("placa_video", "placaVideo"), renderCatalog);
+  renderMultiSelect("msel_tela", catalogFilterStates.tela, "Tela", getFieldOptions("tela", "telaInfo"), renderCatalog);
+  renderMultiSelect("msel_sistema", catalogFilterStates.sistema, "Sistema", getFieldOptions("sistema_operacional", "sistema"), renderCatalog);
+  renderMultiSelect("msel_sistemaEdicao", catalogFilterStates.sistemaEdicao, "Edição", getFieldOptions("sistema_edicao", "sistemaEdicao"), renderCatalog);
+  renderMultiSelect("msel_fonte", catalogFilterStates.fonte, "Fonte", [["SIM","Sim"],["NAO","Não"]], renderCatalog);
+  renderMultiSelect("msel_cameraTeste", catalogFilterStates.cameraTeste, "Câmera", [["SIM","Sim"],["NAO","Não"]], renderCatalog);
+  renderMultiSelect("msel_hdmiUsbC", catalogFilterStates.hdmiUsbC, "HDMI/USB-C", [["SIM","Sim"],["NAO","Não"]], renderCatalog);
+  renderMultiSelect("msel_bateriaStatus", catalogFilterStates.bateriaStatus, "Bateria", [["BOA","Boa"],["FRACA","Fraca"],["NAO SE APLICA","Não se aplica"]], renderCatalog);
+  renderMultiSelect("msel_monitorUsbPossui", catalogFilterStates.monitorUsbPossui, "USB Monitor", [["SIM","Sim"],["NAO","Não"]], renderCatalog);
+  renderMultiSelect("msel_funcionamento", catalogFilterStates.funcionamento, "Funcionamento", [["Total","Total"],["Parcial","Parcial"],["Nao liga","Não liga"]], renderCatalog);
+  renderMultiSelect("msel_usbFuncionamento", catalogFilterStates.usbFuncionamento, "USB Func.", [["Total","Total"],["Parcial","Parcial"],["Nao liga","Não liga"]], renderCatalog);
+  renderMultiSelect("msel_nota", catalogFilterStates.nota, "Nota", [["A","A - Excelente"],["B","B - Bom"],["C","C - Regular"],["D","D - Ruim"]], renderCatalog);
+  updateCatalogFilterVisibility();
 }
+
+function buildCategoriaMultiSelects(){
+  buildCatalogMultiSelects();
+}
+
+function refreshFilterSelects(){
+  buildCatalogMultiSelects();
+}
+
 function categoriaOf(r){ return tipoEquipamentoLabel(r) || equipmentDescription(r); }
 function catalogRecords(){
   const bySelb = new Map();
@@ -1551,40 +2055,60 @@ function catalogRecords(){
   return Array.from(bySelb.values());
 }
 function catalogFiltered(){
-  const q = String(E("catSearch").value||"").toLowerCase();
-  const nota = E("catNota").value, selb = String(E("catSelb").value||"").toLowerCase();
-  const marca = E("catMarca").value, modelo = String(E("catModelo").value||"").toLowerCase();
-  const proc = E("catProcessador").value, ger = E("catGeracao").value, mem = E("catMemoria").value;
-  const arm = E("catArmazenamento").value, tipoArm = E("catTipoArm").value, pv = E("catPlacaVideo").value;
-  const tela = E("catTela").value, sist = E("catSistema").value;
-  const func = E("catFunc") ? E("catFunc").value : "";
+  const q = String(E("catSearch") ? E("catSearch").value : "").toLowerCase();
+  const selb = String(E("catSelb") ? E("catSelb").value : "").trim().toLowerCase();
+  const sku = String(E("catSku") ? E("catSku").value : "").trim().toLowerCase();
+
   return catalogRecords().filter(r=>{
-    if(!categoriaMatches(catFilterState, categoriaOf(r))) return false;
-    if(nota && resultQuality(r)!==nota) return false;
-    if(func && r.funcionamento!==func) return false;
+    if(!multiSelectMatches(catalogFilterStates.categoria, categoriaOf(r))) return false;
     if(selb && !String(r.selb||"").toLowerCase().includes(selb)) return false;
-    if(marca && r.marca!==marca) return false;
-    if(modelo && !String(r.modelo||"").toLowerCase().includes(modelo)) return false;
-    if(proc && r.processador!==proc) return false;
-    if(ger && r.geracao!==ger) return false;
-    if(mem && r.memoria!==mem) return false;
-    if(arm && r.armazenamento!==arm) return false;
-    if(tipoArm && r.tipoArmazenamento!==tipoArm) return false;
-    if(pv && r.placaVideo!==pv) return false;
-    if(tela && r.telaInfo!==tela) return false;
-    if(sist && r.sistema!==sist) return false;
+    if(sku && !String(r.sku||"").toLowerCase().includes(sku)) return false;
+
+    if(!multiSelectMatches(catalogFilterStates.nota, resultQuality(r))) return false;
+    if(!multiSelectMatches(catalogFilterStates.marca, r.marca)) return false;
+    if(!multiSelectMatches(catalogFilterStates.modelo, r.modelo)) return false;
+    if(!multiSelectMatches(catalogFilterStates.fonte, r.fonte)) return false;
+
+    if(isFieldRelevantForActiveProfiles("desktopFormato") && !multiSelectMatches(catalogFilterStates.desktopFormato, r.desktopFormato)) return false;
+    if(isFieldRelevantForActiveProfiles("processador") && !multiSelectMatches(catalogFilterStates.processador, r.processador)) return false;
+    if(isFieldRelevantForActiveProfiles("geracao") && !multiSelectMatches(catalogFilterStates.geracao, r.geracao)) return false;
+    if(isFieldRelevantForActiveProfiles("memoria") && !multiSelectMatches(catalogFilterStates.memoria, r.memoria)) return false;
+    if(isFieldRelevantForActiveProfiles("armazenamento") && !multiSelectMatches(catalogFilterStates.armazenamento, r.armazenamento)) return false;
+    if(isFieldRelevantForActiveProfiles("tipoArmazenamento") && !multiSelectMatches(catalogFilterStates.tipoArmazenamento, r.tipoArmazenamento)) return false;
+    if(isFieldRelevantForActiveProfiles("placaVideo") && !multiSelectMatches(catalogFilterStates.placaVideo, r.placaVideo)) return false;
+    if(isFieldRelevantForActiveProfiles("tela") && !multiSelectMatches(catalogFilterStates.tela, r.telaInfo)) return false;
+    if(isFieldRelevantForActiveProfiles("sistema") && !multiSelectMatches(catalogFilterStates.sistema, r.sistema)) return false;
+    if(isFieldRelevantForActiveProfiles("sistemaEdicao") && !multiSelectMatches(catalogFilterStates.sistemaEdicao, r.sistemaEdicao)) return false;
+    if(isFieldRelevantForActiveProfiles("cameraTeste") && !multiSelectMatches(catalogFilterStates.cameraTeste, r.cameraTeste)) return false;
+    if(isFieldRelevantForActiveProfiles("hdmiUsbC") && !multiSelectMatches(catalogFilterStates.hdmiUsbC, r.hdmiUsbC)) return false;
+    if(isFieldRelevantForActiveProfiles("bateriaStatus") && !multiSelectMatches(catalogFilterStates.bateriaStatus, r.bateriaStatus)) return false;
+    if(isFieldRelevantForActiveProfiles("monitorUsbPossui") && !multiSelectMatches(catalogFilterStates.monitorUsbPossui, r.monitorUsbPossui)) return false;
+    if(isFieldRelevantForActiveProfiles("funcionamento") && !multiSelectMatches(catalogFilterStates.funcionamento, r.funcionamento)) return false;
+    if(isFieldRelevantForActiveProfiles("usbFuncionamento") && !multiSelectMatches(catalogFilterStates.usbFuncionamento, r.usbFuncionamento)) return false;
+
     if(q){
-      const hay = [r.selb,r.sku,categoriaOf(r),r.marca,r.modelo,r.processador,r.geracao,r.memoria,r.armazenamento,r.tipoArmazenamento,r.placaVideo,r.telaInfo,r.sistema,r.sistemaEdicao,productPattern(r)].join(" ").toLowerCase();
+      const hay = [
+        r.selb, r.sku, categoriaOf(r), r.marca, r.modelo,
+        r.processador, r.geracao, r.memoria, r.armazenamento,
+        r.tipoArmazenamento, r.placaVideo, r.telaInfo, r.sistema,
+        r.sistemaEdicao, r.desktopFormato, r.fonte, r.cameraTeste,
+        r.hdmiUsbC, r.bateriaStatus, r.funcionamento, r.usbFuncionamento,
+        productPattern(r)
+      ].join(" ").toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
   });
 }
 function clearCatalogFilters(){
-  ["catSearch","catSelb","catModelo"].forEach(id=>E(id).value="");
-  ["catNota","catMarca","catProcessador","catGeracao","catMemoria","catArmazenamento","catTipoArm","catPlacaVideo","catTela","catSistema", "catFunc"].forEach(id=>{ if(E(id)) E(id).value=""; });
-  catFilterState.all = true; catFilterState.set = new Set();
-  renderMsel("mselCategoria", catFilterState, "Tipo de equipamento", renderCatalog);
+  if(E("catSearch")) E("catSearch").value = "";
+  if(E("catSelb")) E("catSelb").value = "";
+  if(E("catSku")) E("catSku").value = "";
+  Object.keys(catalogFilterStates).forEach(k => {
+    catalogFilterStates[k].all = true;
+    catalogFilterStates[k].set = new Set();
+  });
+  buildCatalogMultiSelects();
   renderCatalog();
 }
 function renderCatalog(){
@@ -1807,6 +2331,585 @@ async function runImport(){
   msgBox("importMsg", ok+" registro(s) importado(s) com sucesso"+(fail?", "+fail+" com erro (veja o console).":"."), fail?"warn":"ok");
   E("importBtn").disabled = false;
   await loadHistory();
+}
+
+/* =====================================================================
+   HIGIENIZACAO / PADRONIZACAO DE DADOS (USUARIO MASTER)
+   ===================================================================== */
+function fecharModal(modalId){
+  const el = E(modalId);
+  if(el) el.classList.remove("show");
+}
+
+function isMasterUser(){
+  return currentUser && currentUser.email === 'lucas_pietroski@hotmail.com';
+}
+
+var higFilterStates = {
+  categoria: { all: true, set: new Set() },
+  marca: { all: true, set: new Set() },
+  modelo: { all: true, set: new Set() },
+  desktopFormato: { all: true, set: new Set() },
+  processador: { all: true, set: new Set() },
+  geracao: { all: true, set: new Set() },
+  memoria: { all: true, set: new Set() },
+  armazenamento: { all: true, set: new Set() },
+  tipoArmazenamento: { all: true, set: new Set() },
+  placaVideo: { all: true, set: new Set() },
+  tela: { all: true, set: new Set() },
+  sistema: { all: true, set: new Set() },
+  sistemaEdicao: { all: true, set: new Set() },
+  fonte: { all: true, set: new Set() },
+  cameraTeste: { all: true, set: new Set() },
+  hdmiUsbC: { all: true, set: new Set() },
+  bateriaStatus: { all: true, set: new Set() },
+  funcionamento: { all: true, set: new Set() },
+  usbFuncionamento: { all: true, set: new Set() },
+  nota: { all: true, set: new Set() }
+};
+
+var currentHigVariacoes = [];
+var selectedHigRecordIds = new Set();
+var higRecordsCache = [];
+
+function initHigienizacaoTab(){
+  buildHigMultiSelects();
+}
+
+function onHigCategoriaFilterChange(){
+  updateHigFilterVisibility();
+  renderMultiSelect("msel_hig_modelo", higFilterStates.modelo, "Modelo", getHigModelOptions(), onHigFilterChange);
+  onHigFilterChange();
+}
+
+function getHigModelOptions(){
+  const set = new Set();
+  catalogRecords().forEach(r => {
+    if(!categoriaMatches(higFilterStates.categoria, categoriaOf(r))) return;
+    const m = trim(r.modelo);
+    if(m) set.add(m);
+  });
+  if(!set.size){
+    catalogRecords().forEach(r => { const m = trim(r.modelo); if(m) set.add(m); });
+  }
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+
+function updateHigFilterVisibility(){
+  const filterGroups = document.querySelectorAll("#higFiltersGrid [data-fgroup]");
+  filterGroups.forEach(el => {
+    const fieldId = el.getAttribute("data-fgroup");
+    const visible = isFieldRelevantForActiveProfiles(fieldId);
+    el.style.display = visible ? "flex" : "none";
+  });
+}
+
+function buildHigMultiSelects(){
+  renderMultiSelect("msel_hig_tipoEquipamento", higFilterStates.categoria, "Tipo", categoriaOptionsList(), onHigCategoriaFilterChange);
+  renderMultiSelect("msel_hig_marca", higFilterStates.marca, "Marca", getFieldOptions("marca", "marca"), onHigFilterChange);
+  renderMultiSelect("msel_hig_modelo", higFilterStates.modelo, "Modelo", getHigModelOptions(), onHigFilterChange);
+  renderMultiSelect("msel_hig_desktopFormato", higFilterStates.desktopFormato, "Formato", [["MICRO","Micro"],["SLIM","Slim"],["FULL TOWER","Full tower"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_processador", higFilterStates.processador, "Processador", getFieldOptions("processador", "processador"), onHigFilterChange);
+  renderMultiSelect("msel_hig_geracao", higFilterStates.geracao, "Geracao", getFieldOptions("geracao", "geracao"), onHigFilterChange);
+  renderMultiSelect("msel_hig_memoria", higFilterStates.memoria, "Memoria", getFieldOptions("memoria", "memoria"), onHigFilterChange);
+  renderMultiSelect("msel_hig_armazenamento", higFilterStates.armazenamento, "Armazenamento", getFieldOptions("armazenamento", "armazenamento"), onHigFilterChange);
+  renderMultiSelect("msel_hig_tipoArmazenamento", higFilterStates.tipoArmazenamento, "Tipo Arm.", getFieldOptions("tipo_armazenamento", "tipoArmazenamento"), onHigFilterChange);
+  renderMultiSelect("msel_hig_placaVideo", higFilterStates.placaVideo, "Placa Video", getFieldOptions("placa_video", "placaVideo"), onHigFilterChange);
+  renderMultiSelect("msel_hig_tela", higFilterStates.tela, "Tela", getFieldOptions("tela", "telaInfo"), onHigFilterChange);
+  renderMultiSelect("msel_hig_sistema", higFilterStates.sistema, "Sistema", getFieldOptions("sistema_operacional", "sistema"), onHigFilterChange);
+  renderMultiSelect("msel_hig_sistemaEdicao", higFilterStates.sistemaEdicao, "Edicao", getFieldOptions("sistema_edicao", "sistemaEdicao"), onHigFilterChange);
+  renderMultiSelect("msel_hig_fonte", higFilterStates.fonte, "Fonte", [["SIM","Sim"],["NAO","Nao"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_cameraTeste", higFilterStates.cameraTeste, "Camera", [["SIM","Sim"],["NAO","Nao"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_hdmiUsbC", higFilterStates.hdmiUsbC, "HDMI/USB-C", [["SIM","Sim"],["NAO","Nao"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_bateriaStatus", higFilterStates.bateriaStatus, "Bateria", [["BOA","Boa"],["FRACA","Fraca"],["NAO SE APLICA","Nao se aplica"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_funcionamento", higFilterStates.funcionamento, "Funcionamento", [["Total","Total"],["Parcial","Parcial"],["Nao liga","Nao liga"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_usbFuncionamento", higFilterStates.usbFuncionamento, "USB Func.", [["Total","Total"],["Parcial","Parcial"],["Nao liga","Nao liga"]], onHigFilterChange);
+  renderMultiSelect("msel_hig_nota", higFilterStates.nota, "Nota", [["A","A - Excelente"],["B","B - Bom"],["C","C - Regular"],["D","D - Ruim"]], onHigFilterChange);
+  updateHigFilterVisibility();
+}
+
+function clearHigFilters(){
+  if(E("higSearch")) E("higSearch").value = "";
+  if(E("higSelb")) E("higSelb").value = "";
+  if(E("higSku")) E("higSku").value = "";
+  Object.keys(higFilterStates).forEach(k => {
+    higFilterStates[k].all = true;
+    higFilterStates[k].set = new Set();
+  });
+  buildHigMultiSelects();
+  onHigFilterChange();
+}
+
+function onHigFilterChange(){
+  if(E("higVariacoesWrapper") && E("higVariacoesWrapper").style.display !== "none"){
+    scanHigVariacoes();
+  }
+}
+
+function onHigTargetFieldChange(){
+  if(E("higVariacoesWrapper") && E("higVariacoesWrapper").style.display !== "none"){
+    scanHigVariacoes();
+  }
+}
+
+function getHigFilteredRecords(){
+  const q = String(E("higSearch") ? E("higSearch").value : "").toLowerCase();
+  const selb = String(E("higSelb") ? E("higSelb").value : "").trim().toLowerCase();
+  const sku = String(E("higSku") ? E("higSku").value : "").trim().toLowerCase();
+
+  return catalogRecords().filter(r=>{
+    if(!multiSelectMatches(higFilterStates.categoria, categoriaOf(r))) return false;
+    if(selb && !String(r.selb||"").toLowerCase().includes(selb)) return false;
+    if(sku && !String(r.sku||"").toLowerCase().includes(sku)) return false;
+
+    if(!multiSelectMatches(higFilterStates.nota, resultQuality(r))) return false;
+    if(!multiSelectMatches(higFilterStates.marca, r.marca)) return false;
+    if(!multiSelectMatches(higFilterStates.modelo, r.modelo)) return false;
+    if(!multiSelectMatches(higFilterStates.fonte, r.fonte)) return false;
+
+    if(isFieldRelevantForActiveProfiles("desktopFormato") && !multiSelectMatches(higFilterStates.desktopFormato, r.desktopFormato)) return false;
+    if(isFieldRelevantForActiveProfiles("processador") && !multiSelectMatches(higFilterStates.processador, r.processador)) return false;
+    if(isFieldRelevantForActiveProfiles("geracao") && !multiSelectMatches(higFilterStates.geracao, r.geracao)) return false;
+    if(isFieldRelevantForActiveProfiles("memoria") && !multiSelectMatches(higFilterStates.memoria, r.memoria)) return false;
+    if(isFieldRelevantForActiveProfiles("armazenamento") && !multiSelectMatches(higFilterStates.armazenamento, r.armazenamento)) return false;
+    if(isFieldRelevantForActiveProfiles("tipoArmazenamento") && !multiSelectMatches(higFilterStates.tipoArmazenamento, r.tipoArmazenamento)) return false;
+    if(isFieldRelevantForActiveProfiles("placaVideo") && !multiSelectMatches(higFilterStates.placaVideo, r.placaVideo)) return false;
+    if(isFieldRelevantForActiveProfiles("tela") && !multiSelectMatches(higFilterStates.tela, r.telaInfo)) return false;
+    if(isFieldRelevantForActiveProfiles("sistema") && !multiSelectMatches(higFilterStates.sistema, r.sistema)) return false;
+    if(isFieldRelevantForActiveProfiles("sistemaEdicao") && !multiSelectMatches(higFilterStates.sistemaEdicao, r.sistemaEdicao)) return false;
+    if(isFieldRelevantForActiveProfiles("cameraTeste") && !multiSelectMatches(higFilterStates.cameraTeste, r.cameraTeste)) return false;
+    if(isFieldRelevantForActiveProfiles("hdmiUsbC") && !multiSelectMatches(higFilterStates.hdmiUsbC, r.hdmiUsbC)) return false;
+    if(isFieldRelevantForActiveProfiles("bateriaStatus") && !multiSelectMatches(higFilterStates.bateriaStatus, r.bateriaStatus)) return false;
+    if(isFieldRelevantForActiveProfiles("funcionamento") && !multiSelectMatches(higFilterStates.funcionamento, r.funcionamento)) return false;
+    if(isFieldRelevantForActiveProfiles("usbFuncionamento") && !multiSelectMatches(higFilterStates.usbFuncionamento, r.usbFuncionamento)) return false;
+
+    if(q){
+      const hay = [
+        r.selb, r.sku, categoriaOf(r), r.marca, r.modelo,
+        r.processador, r.geracao, r.memoria, r.armazenamento,
+        r.tipoArmazenamento, r.placaVideo, r.telaInfo, r.sistema,
+        r.sistemaEdicao, r.desktopFormato, r.fonte, r.cameraTeste,
+        r.hdmiUsbC, r.bateriaStatus, r.funcionamento, r.usbFuncionamento,
+        productPattern(r)
+      ].join(" ").toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function getRecordFieldValue(r, field){
+  if(field === "tipoEquipamento") return categoriaOf(r);
+  return r[field] != null ? String(r[field]) : "";
+}
+
+function scanHigVariacoes(){
+  const field = E("higTargetField").value;
+  const filtered = getHigFilteredRecords();
+  
+  const counts = new Map();
+  filtered.forEach(r => {
+    const val = getRecordFieldValue(r, field);
+    counts.set(val, (counts.get(val) || 0) + 1);
+  });
+
+  currentHigVariacoes = Array.from(counts.entries())
+    .map(([valor, count]) => ({ valor, count, selected: false }))
+    .sort((a,b) => b.count - a.count);
+
+  renderHigVariacoesTable();
+  E("higVariacoesWrapper").style.display = "block";
+  E("higRecordsWrapper").style.display = "none";
+  selectedHigRecordIds.clear();
+}
+
+function renderHigVariacoesTable(){
+  const tb = E("higVariacoesBody");
+  tb.innerHTML = "";
+  E("higVariacoesCount").innerText = currentHigVariacoes.length + " variacao(oes) encontrada(s)";
+
+  currentHigVariacoes.forEach((item, idx) => {
+    const tr = document.createElement("tr");
+    const displayVal = item.valor === "" ? '<em style="color:var(--muted);">(Vazio / Nao informado)</em>' : htmlEsc(item.valor);
+    tr.innerHTML = `
+      <td><input type="checkbox" data-idx="${idx}" ${item.selected ? "checked" : ""} onchange="onHigVarToggle(${idx}, this.checked)"></td>
+      <td><strong>${displayVal}</strong></td>
+      <td><span class="var-pill">${item.count}</span></td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  const allSelected = currentHigVariacoes.length > 0 && currentHigVariacoes.every(v => v.selected);
+  if(E("higVarCheckAll")) E("higVarCheckAll").checked = allSelected;
+
+  renderHigRecordsTable();
+}
+
+function onHigVarToggle(idx, checked){
+  currentHigVariacoes[idx].selected = checked;
+  const allSelected = currentHigVariacoes.every(v => v.selected);
+  if(E("higVarCheckAll")) E("higVarCheckAll").checked = allSelected;
+  renderHigRecordsTable();
+}
+
+function toggleAllHigVariacoes(checked){
+  currentHigVariacoes.forEach(v => v.selected = checked);
+  renderHigVariacoesTable();
+}
+
+function renderHigRecordsTable(){
+  const selectedVals = new Set(currentHigVariacoes.filter(v => v.selected).map(v => v.valor));
+  const field = E("higTargetField").value;
+  const thField = E("higThCampo");
+  if(thField) thField.innerText = "Valor Atual (" + field + ")";
+
+  if(!selectedVals.size){
+    E("higRecordsWrapper").style.display = "none";
+    selectedHigRecordIds.clear();
+    return;
+  }
+
+  const filtered = getHigFilteredRecords();
+  higRecordsCache = filtered.filter(r => selectedVals.has(getRecordFieldValue(r, field)));
+
+  selectedHigRecordIds = new Set(higRecordsCache.map(r => r.id));
+
+  const tb = E("higRecordsBody");
+  tb.innerHTML = "";
+
+  higRecordsCache.forEach(r => {
+    const tr = document.createElement("tr");
+    const val = getRecordFieldValue(r, field);
+    const displayVal = val === "" ? '<em style="color:var(--muted);">(Vazio)</em>' : htmlEsc(val);
+    const isChecked = selectedHigRecordIds.has(r.id);
+
+    tr.innerHTML = `
+      <td><input type="checkbox" data-id="${r.id}" ${isChecked ? "checked" : ""} onchange="onHigRecordToggle('${r.id}', this.checked)"></td>
+      <td><strong>${htmlEsc(r.selb || "-")}</strong></td>
+      <td>${htmlEsc(r.sku || "-")}</td>
+      <td>${htmlEsc(categoriaOf(r))}</td>
+      <td>${htmlEsc(r.modelo || "-")}</td>
+      <td>${displayVal}</td>
+      <td>${htmlEsc(r.data || "-")}</td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  E("higRecordsWrapper").style.display = "block";
+  updateHigSelectionCounts();
+}
+
+function onHigRecordToggle(id, checked){
+  if(checked) selectedHigRecordIds.add(id);
+  else selectedHigRecordIds.delete(id);
+  updateHigSelectionCounts();
+}
+
+function selecionarTodosHigRecords(bool){
+  if(bool){
+    higRecordsCache.forEach(r => selectedHigRecordIds.add(r.id));
+  } else {
+    selectedHigRecordIds.clear();
+  }
+  const checkboxes = document.querySelectorAll("#higRecordsBody input[type=checkbox]");
+  checkboxes.forEach(cb => cb.checked = bool);
+  if(E("higRecordsCheckAll")) E("higRecordsCheckAll").checked = bool;
+  updateHigSelectionCounts();
+}
+
+function toggleAllHigRecords(checked){
+  selecionarTodosHigRecords(checked);
+}
+
+function updateHigSelectionCounts(){
+  const count = selectedHigRecordIds.size;
+  const total = higRecordsCache.length;
+  E("higRecordsCount").innerText = `${count} de ${total} equipamento(s) selecionado(s) para alteracao`;
+  if(E("higRecordsCheckAll")){
+    E("higRecordsCheckAll").checked = total > 0 && count === total;
+  }
+}
+
+/* =====================================================================
+   EXECUCAO DA HIGIENIZACAO COM SEGURANCA E CONFIRMACAO
+   ===================================================================== */
+function abrirConfirmacaoHigienizacao(){
+  if(!isMasterUser()){
+    alert("Acesso restrito ao usuario master.");
+    return;
+  }
+  if(selectedHigRecordIds.size === 0){
+    alert("Selecione ao menos 1 equipamento na tabela abaixo para aplicar a alteracao.");
+    return;
+  }
+  const newVal = trim(E("higNewValue").value);
+  if(!newVal){
+    alert("Informe o novo valor padronizado antes de prosseguir.");
+    E("higNewValue").focus();
+    return;
+  }
+
+  const selectedVariacoes = currentHigVariacoes.filter(v => v.selected).map(v => v.valor);
+  const field = E("higTargetField").value;
+
+  E("modalHigCount").innerText = selectedHigRecordIds.size;
+  E("modalHigCampo").innerText = field;
+  E("modalHigOldValues").innerText = selectedVariacoes.map(v => `"${v || '(vazio)'}"`).join(", ");
+  E("modalHigNewValue").innerText = `"${newVal}"`;
+
+  E("modalConfirmHig").classList.add("show");
+}
+
+async function executarHigienizacao(){
+  if(!isMasterUser()){
+    alert("Acesso nao autorizado.");
+    return;
+  }
+  const btn = E("btnConfirmarHigExec");
+  btn.disabled = true;
+  btn.innerText = "Processando no banco...";
+
+  const loteId = crypto.randomUUID();
+  const ids = Array.from(selectedHigRecordIds);
+  const field = E("higTargetField").value;
+  const oldValues = currentHigVariacoes.filter(v => v.selected).map(v => v.valor);
+  const newValue = trim(E("higNewValue").value);
+
+  try {
+    const { data, error } = await supa.rpc("higienizar_campo_inspecoes", {
+      p_lote_id: loteId,
+      p_ids: ids,
+      p_campo: field,
+      p_valores_antigos: oldValues,
+      p_valor_novo: newValue
+    });
+
+    if(error){
+      throw error;
+    }
+
+    fecharModal("modalConfirmHig");
+
+    // Modal de Resultado
+    E("modalResultHigTitle").innerText = "Higienizacao Concluida!";
+    E("modalResultHigBody").innerHTML = `
+      <div style="color:var(--green-dark);font-weight:700;margin-bottom:8px;">✅ ${data.updated_count} equipamento(s) atualizado(s) com sucesso.</div>
+      ${data.skipped_count > 0 ? `<div style="color:var(--amber);margin-bottom:8px;">⚠️ ${data.skipped_count} equipamento(s) nao foram alterados porque o valor havia mudado desde a selecao (protecao de concorrencia).</div>` : ""}
+      <div style="font-size:12px;color:var(--muted);margin-top:12px;border-top:1px solid var(--border);padding-top:8px;">
+        💾 Backup automatico criado na tabela <code>higienizacao_backups</code> com lote <strong>#${loteId.slice(0,8)}</strong>.
+      </div>
+    `;
+    E("modalResultHig").classList.add("show");
+
+    // Recarrega banco
+    await loadHistory();
+    scanHigVariacoes();
+
+  } catch(err){
+    alert("Erro na operacao de higienizacao: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Confirmar e Aplicar no Banco";
+  }
+}
+
+/* =====================================================================
+   BACKUP E RESTAURACAO (CAMPO VS SNAPSHOT)
+   ===================================================================== */
+async function openBackupsModal(){
+  if(!isMasterUser()){
+    alert("Acesso restrito ao usuario master.");
+    return;
+  }
+  E("modalBackupsHig").classList.add("show");
+  await carregarHistoricoBackups();
+}
+
+async function carregarHistoricoBackups(){
+  const tb = E("backupsTableBody");
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Carregando backups do Supabase...</td></tr>';
+
+  const { data, error } = await supa
+    .from("higienizacao_backups")
+    .select("lote_id, created_at, usuario_email, campo, valor_antigo, valor_novo, status")
+    .order("created_at", { ascending: false });
+
+  if(error){
+    tb.innerHTML = `<tr><td colspan="7" style="color:var(--red);padding:20px;text-align:center;">Erro ao buscar backups: ${htmlEsc(error.message)}</td></tr>`;
+    return;
+  }
+
+  if(!data || !data.length){
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Nenhum backup encontrado na base.</td></tr>';
+    return;
+  }
+
+  // Agrupa por lote_id
+  const lotesMap = new Map();
+  data.forEach(item => {
+    if(!lotesMap.has(item.lote_id)){
+      lotesMap.set(item.lote_id, {
+        lote_id: item.lote_id,
+        created_at: item.created_at,
+        usuario_email: item.usuario_email,
+        campo: item.campo,
+        valor_novo: item.valor_novo,
+        status: item.status,
+        count: 0
+      });
+    }
+    lotesMap.get(item.lote_id).count++;
+  });
+
+  const lotes = Array.from(lotesMap.values());
+  tb.innerHTML = "";
+
+  lotes.forEach(lote => {
+    const tr = document.createElement("tr");
+    const d = new Date(lote.created_at);
+    const dateFmt = d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+    const isConcluido = lote.status === "CONCLUIDO";
+
+    let statusBadge = `<span class="backup-status-tag status-concluido">Concluido</span>`;
+    if(lote.status === "REVERTIDO_CAMPO"){
+      statusBadge = `<span class="backup-status-tag status-revertido">Revertido (Campo)</span>`;
+    } else if(lote.status === "REVERTIDO_SNAPSHOT"){
+      statusBadge = `<span class="backup-status-tag status-revertido">Revertido (Snapshot)</span>`;
+    }
+
+    let actionsHtml = `
+      <button class="btn sm" onclick="exportarBackupLoteXLSX('${lote.lote_id}')">📥 XLSX</button>
+    `;
+
+    if(isConcluido){
+      actionsHtml += `
+        <button class="btn sm" style="color:var(--green-dark);" onclick="abrirConfirmacaoRestauracao('${lote.lote_id}', 'CAMPO', '${htmlEsc(lote.campo)}', ${lote.count})">↩️ Reverter campo</button>
+        <button class="btn sm danger" onclick="abrirConfirmacaoRestauracao('${lote.lote_id}', 'SNAPSHOT', '${htmlEsc(lote.campo)}', ${lote.count})">⚠️ Snapshot</button>
+      `;
+    }
+
+    tr.innerHTML = `
+      <td>${dateFmt}</td>
+      <td>${htmlEsc(lote.usuario_email)}</td>
+      <td><strong>${lote.count}</strong></td>
+      <td><code>${htmlEsc(lote.campo)}</code></td>
+      <td>${htmlEsc(lote.valor_novo)}</td>
+      <td>${statusBadge}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">${actionsHtml}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+async function exportarBackupLoteXLSX(loteId){
+  const { data, error } = await supa
+    .from("higienizacao_backups")
+    .select("*")
+    .eq("lote_id", loteId);
+
+  if(error || !data || !data.length){
+    alert("Erro ao buscar dados do lote para exportacao.");
+    return;
+  }
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Backup");
+
+  const headers = ["SELB", "SKU", "Campo Alterado", "Valor Original (Antes)", "Valor Aplicado (Novo)", "Data Operacao", "Executor", "Status"];
+  ws.addRow(headers);
+
+  data.forEach(r => {
+    ws.addRow([
+      r.selb,
+      r.sku,
+      r.campo,
+      r.valor_antigo,
+      r.valor_novo,
+      new Date(r.created_at).toLocaleString("pt-BR"),
+      r.usuario_email,
+      r.status
+    ]);
+  });
+
+  const headerRow = ws.getRow(1);
+  headerRow.height = 24;
+  headerRow.eachCell(cell => {
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF07341F" } };
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0,10) + "_" + String(now.getHours()).padStart(2,"0") + String(now.getMinutes()).padStart(2,"0");
+  downloadBlob(buf, `backup_higienizacao_${dateStr}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+}
+
+function abrirConfirmacaoRestauracao(loteId, modo, campo, count){
+  const title = E("restauracaoTitle");
+  const sub = E("restauracaoSub");
+  const box = E("restauracaoAlertBox");
+  const btn = E("btnExecRestauracao");
+
+  if(modo === "CAMPO"){
+    title.innerText = "↩️ Restaurar Campo Alterado (Modo Recomendado)";
+    sub.innerText = `Reverte apenas o campo "${campo}" para os valores originais em ${count} registro(s).`;
+    box.style.background = "#EFF7F2";
+    box.style.border = "1px solid #BCE7CF";
+    box.innerHTML = `
+      <div style="color:var(--green-dark);font-weight:700;margin-bottom:6px;">Restaurando somente o campo higienizado:</div>
+      <div style="font-size:12.5px;color:var(--text);line-height:1.5;">
+        Este modo reverte exclusivamente o valor do campo <code>${campo}</code>. Qualquer outra alteracao legitima feita em outros campos desses equipamentos desde entao <strong>NAO</strong> sera afetada.
+      </div>
+    `;
+    btn.className = "btn primary";
+    btn.innerText = "Confirmar Restauracao do Campo";
+  } else {
+    title.innerText = "⚠️ Restauracao de Snapshot Completo";
+    sub.innerText = `Restaura o estado integral de ${count} equipamento(s) para a fotografia exata do backup.`;
+    box.style.background = "#FBEAE8";
+    box.style.border = "1px solid #F2C4BE";
+    box.innerHTML = `
+      <div style="color:var(--red);font-weight:700;margin-bottom:6px;">⚠️ CUIDADO — Potencial sobrescrita de dados:</div>
+      <div style="font-size:12.5px;color:#7A2E28;line-height:1.5;">
+        Este modo sobrescrevera o registro <strong>COMPLETO</strong> no banco de dados. Qualquer alteracao feita nesses equipamentos apos este backup sera <strong>PERMANENTEMENTE PERDIDA</strong>.
+      </div>
+    `;
+    btn.className = "btn danger";
+    btn.innerText = "Estou ciente do risco, Restaurar Snapshot";
+  }
+
+  btn.onclick = () => executarRestauracao(loteId, modo);
+  E("modalConfirmRestauracao").classList.add("show");
+}
+
+async function executarRestauracao(loteId, modo){
+  const btn = E("btnExecRestauracao");
+  btn.disabled = true;
+  btn.innerText = "Restaurando no banco...";
+
+  try {
+    const { data, error } = await supa.rpc("restaurar_backup", {
+      p_lote_id: loteId,
+      p_modo: modo
+    });
+
+    if(error){
+      throw error;
+    }
+
+    fecharModal("modalConfirmRestauracao");
+    alert(`Restauracao concluida! ${data.restored_count} registro(s) restaurado(s) com sucesso.`);
+
+    await carregarHistoricoBackups();
+    await loadHistory();
+    if(E("higVariacoesWrapper") && E("higVariacoesWrapper").style.display !== "none") scanHigVariacoes();
+
+  } catch(err){
+    alert("Erro ao restaurar backup: " + err.message);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /* =====================================================================
