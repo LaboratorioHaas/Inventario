@@ -204,7 +204,7 @@ input:checked + .slider:before{transform:translateX(16px);}
     <div class="login-pane active" id="paneLab">
       <div class="field"><input type="text" id="loginEmail" placeholder="E-mail"></div>
       <div class="field"><input type="password" id="loginSenha" placeholder="Senha"></div>
-      <button class="btn primary" style="width:100%;" onclick="doLoginLab()">Entrar</button>
+      <button id="btnLoginLab" class="btn primary" style="width:100%;" onclick="doLoginLab()">Entrar</button>
       <div class="login-err" id="loginErr"></div>
     </div>
 
@@ -308,20 +308,26 @@ input:checked + .slider:before{transform:translateX(16px);}
 <!-- ===================== HISTORICO ===================== -->
 <div class="view" id="view-historico">
   <div class="card">
-    <div class="toprow">
+    <div class="toprow" style="margin-bottom:14px;">
       <div class="card-title" style="margin:0;">Historico de inspecoes</div>
-      <div class="actions">
-        <span class="hint">Exportar por perfil (detalhado):</span>
-        <select id="exportProfile" style="padding:6px 9px;border:1px solid var(--border);border-radius:6px;"></select>
-        <button class="btn" onclick="exportCSV()">Exportar CSV</button>
-        <button class="btn primary" onclick="exportXLSX()">Exportar XLSX</button>
-      </div>
     </div>
-    <div class="toprow">
-      <span class="hint">Exportar por tipo de equipamento (resumido, respeita os filtros abaixo):</span>
-      <div class="actions">
-        <span class="msel" id="mselHistExport"></span>
-        <button class="btn primary" onclick="exportUnifiedXLSX(filtered(), 'historico_categorias')">Exportar XLSX (categorias)</button>
+    <div class="hist-export-row">
+      <!-- Exportar por tipo -->
+      <div class="hist-export-block">
+        <div class="hist-export-label">Exportar por tipo de equipamento <span style="font-weight:400;font-size:12px;color:var(--muted);">(resumido, respeita os filtros abaixo)</span></div>
+        <div class="actions" style="margin-top:8px;flex-wrap:wrap;gap:8px;">
+          <span class="msel" id="mselHistExport"></span>
+          <button class="btn primary" onclick="exportUnifiedXLSX(filtered(), 'historico_categorias')">Exportar XLSX (categorias)</button>
+        </div>
+      </div>
+      <!-- Exportar por perfil -->
+      <div class="hist-export-block">
+        <div class="hist-export-label">Exportar por perfil <span style="font-weight:400;font-size:12px;color:var(--muted);">(detalhado)</span></div>
+        <div class="actions" style="margin-top:8px;flex-wrap:wrap;gap:8px;">
+          <span class="msel" id="exportProfileMsel"></span>
+          <button class="btn" onclick="exportCSV()">Exportar CSV</button>
+          <button class="btn primary" onclick="exportXLSX()">Exportar XLSX</button>
+        </div>
       </div>
     </div>
     <div class="filters">
@@ -1008,7 +1014,8 @@ function exportRow(r, profile){
 var supa = null;
 var allHistory = [];
 var activeProfile = "notebook";
-var exportProfileSel = "notebook";
+var exportProfileSel = "notebook"; // kept for legacy compat
+var exportProfileState = {all:true, set:new Set()};
 var editId = null;
 var startTime = null, timerInterval = null, elapsedBeforePause = 0;
 var currentUser = null, currentRole = null;
@@ -1076,11 +1083,25 @@ function showLoginScreen(){
   E("userBadge").style.display = "none";
 }
 async function doLoginLab(){
+  const btn = E("btnLoginLab");
   const email = trim(E("loginEmail").value), senha = E("loginSenha").value;
   const err = E("loginErr"); err.style.display="none";
   if(!email || !senha){ err.innerText="Preencha e-mail e senha."; err.style.display="block"; return; }
-  const { error } = await supa.auth.signInWithPassword({ email, password: senha });
-  if(error){ err.innerText = "Nao foi possivel entrar: "+error.message; err.style.display="block"; }
+  if(btn){ btn.disabled = true; btn.innerText = "Entrando..."; }
+  try {
+    const { data, error } = await supa.auth.signInWithPassword({ email, password: senha });
+    if(error){
+      err.innerText = "Nao foi possivel entrar: " + error.message;
+      err.style.display = "block";
+    } else if(data && data.user) {
+      await onAuthReady(data.user);
+    }
+  } catch(e) {
+    err.innerText = "Erro ao conectar: " + e.message;
+    err.style.display = "block";
+  } finally {
+    if(btn){ btn.disabled = false; btn.innerText = "Entrar"; }
+  }
 }
 async function doSignupLab(){
   const email = trim(E("loginEmail").value), senha = E("loginSenha").value;
@@ -1095,8 +1116,18 @@ async function doSignupLab(){
 }
 async function doLoginComercial(){
   const err = E("loginErrCom"); err.style.display="none";
-  const { error } = await supa.auth.signInAnonymously();
-  if(error){ err.innerText = "Acesso comercial indisponivel: "+error.message+" (habilite 'Anonymous Sign-ins' no Supabase Auth)."; err.style.display="block"; }
+  try {
+    const { data, error } = await supa.auth.signInAnonymously();
+    if(error){
+      err.innerText = "Acesso comercial indisponivel: "+error.message+" (habilite 'Anonymous Sign-ins' no Supabase Auth).";
+      err.style.display="block";
+    } else if(data && data.user) {
+      await onAuthReady(data.user);
+    }
+  } catch(e) {
+    err.innerText = "Erro ao conectar: " + e.message;
+    err.style.display = "block";
+  }
 }
 async function doLogout(){
   await supa.auth.signOut();
@@ -1128,29 +1159,47 @@ function applyRoleUI(){
   document.querySelectorAll(".master-only").forEach(el=> el.classList.toggle("hidden-role", !isMaster));
 }
 
+let isLoadingHistory = false;
+let realtimeDebounceTimer = null;
+let isExecutingBatchHigienizacao = false;
+
 async function loadHistory(){
   if(!supa) return;
-  const PAGE = 1000;
-  let all = [], page = 0, done = false;
-  while(!done){
-    const from = page * PAGE, to = from + PAGE - 1;
-    const { data, error } = await supa.from("inspecoes").select("payload").eq("deleted", false).order("updated_at_ms", {ascending:false}).range(from, to);
-    if(error){ console.error(error); return; }
-    const rows = data || [];
-    all = all.concat(rows.map(row=>row.payload));
-    done = rows.length < PAGE;
-    page++;
+  if(isLoadingHistory) return;
+  isLoadingHistory = true;
+  try {
+    const PAGE = 1000;
+    let all = [], page = 0, done = false;
+    while(!done){
+      const from = page * PAGE, to = from + PAGE - 1;
+      const { data, error } = await supa.from("inspecoes").select("payload").eq("deleted", false).order("updated_at_ms", {ascending:false}).range(from, to);
+      if(error){ console.error(error); return; }
+      const rows = data || [];
+      all = all.concat(rows.map(row=>row.payload));
+      done = rows.length < PAGE;
+      page++;
+    }
+    allHistory = all;
+    buildCatalogMultiSelects();
+    renderHistory();
+    renderDashboard();
+    renderCatalog();
+  } catch(e) {
+    console.error("Erro ao carregar historico:", e);
+  } finally {
+    isLoadingHistory = false;
   }
-  allHistory = all;
-  buildCatalogMultiSelects();
-  renderHistory();
-  renderDashboard();
-  renderCatalog();
 }
 function subscribeRealtime(){
   if(!supa) return;
   supa.channel("inspecoes-changes")
-    .on("postgres_changes", {event:"*", schema:"public", table:"inspecoes"}, ()=>{ loadHistory(); })
+    .on("postgres_changes", {event:"*", schema:"public", table:"inspecoes"}, ()=>{
+      if(isExecutingBatchHigienizacao) return;
+      if(realtimeDebounceTimer) clearTimeout(realtimeDebounceTimer);
+      realtimeDebounceTimer = setTimeout(()=>{
+        loadHistory();
+      }, 1500);
+    })
     .subscribe();
 }
 
@@ -1162,7 +1211,23 @@ async function loadOpcoes(tipoCampo){
   opcoesCache[tipoCampo] = data || [];
 }
 async function loadOpcoesAll(){
-  await Promise.all(DYNAMIC_TIPOS.map(t=>loadOpcoes(t)));
+  if(!supa) return;
+  try {
+    const { data, error } = await supa.from("opcoes").select("*").order("valor");
+    if(error){
+      console.warn("Falha no select unificado de opcoes, tentando individual:", error);
+      await Promise.all(DYNAMIC_TIPOS.map(t=>loadOpcoes(t)));
+    } else {
+      DYNAMIC_TIPOS.forEach(t => { opcoesCache[t] = []; });
+      (data || []).forEach(o => {
+        if(!opcoesCache[o.tipo_campo]) opcoesCache[o.tipo_campo] = [];
+        opcoesCache[o.tipo_campo].push(o);
+      });
+    }
+  } catch(e) {
+    console.error("Excecao ao carregar opcoes:", e);
+    await Promise.all(DYNAMIC_TIPOS.map(t=>loadOpcoes(t)));
+  }
   refreshAllDSelects();
   refreshFilterSelects();
   buildCategoriaMultiSelects();
@@ -1201,7 +1266,13 @@ function showTab(tab){
   E("view-"+tab).classList.add("active");
   document.querySelector('.tabbtn[data-tab="'+tab+'"]').classList.add("active");
   if(tab==="catalogo"){ buildCatalogMultiSelects(); renderCatalog(); }
-  if(tab==="opcoes"){ buildOptTabs(); renderAdminOptions(); }
+  if(tab==="opcoes"){
+    buildOptTabs();
+    renderAdminOptions();
+    if(!opcoesCache[adminActiveTipo] || !opcoesCache[adminActiveTipo].length){
+      loadOpcoes(adminActiveTipo).then(()=>renderAdminOptions());
+    }
+  }
   if(tab==="higienizacao"){ initHigienizacaoTab(); }
 }
 
@@ -1217,13 +1288,8 @@ function buildProfileTabs(){
     b.onclick = ()=>setProfile(p);
     wrap.appendChild(b);
   });
-  const sel = E("exportProfile"); sel.innerHTML="";
-  profileOrder.forEach(p=>{
-    const o = document.createElement("option"); o.value=p; o.innerText=checklistProfiles[p].label;
-    sel.appendChild(o);
-  });
-  sel.value = exportProfileSel;
-  sel.onchange = ()=>{ exportProfileSel = sel.value; };
+  const profileOptions = profileOrder.map(p=>[p, checklistProfiles[p].label]);
+  renderMultiSelect("exportProfileMsel", exportProfileState, "Perfil", profileOptions, null);
 }
 function buildFormGrid(){
   const grid = E("formGrid"); grid.innerHTML = "";
@@ -1632,73 +1698,91 @@ function renderDashboard(){
 /* =====================================================================
    EXPORTACAO
    ===================================================================== */
+function getSelectedProfiles(){
+  if(exportProfileState.all || exportProfileState.set.size === 0){
+    return [...profileOrder];
+  }
+  return profileOrder.filter(p => exportProfileState.set.has(p));
+}
+
 function exportCSV(){
-  const profile = exportProfileSel;
-  const rows = allHistory.filter(r=>profileFromRecord(r)===profile);
-  const headers = exportHeadersList(profile);
-  const csvRows = [headers.join(";")];
-  rows.forEach(r=>{
-    const row = exportRow(r, profile).map(v=>{
-      let s = String(v==null?"":v).replace(/"/g,'""');
-      if(s.indexOf(";")>=0||s.indexOf("\n")>=0) s='"'+s+'"';
-      return s;
+  const profiles = getSelectedProfiles();
+  if(!profiles.length){ alert("Nenhum perfil selecionado."); return; }
+  profiles.forEach(profile => {
+    const rows = allHistory.filter(r=>profileFromRecord(r)===profile);
+    if(!rows.length) return;
+    const headers = exportHeadersList(profile);
+    const csvRows = [headers.join(";")];
+    rows.forEach(r=>{
+      const row = exportRow(r, profile).map(v=>{
+        let s = String(v==null?"":v).replace(/"/g,'""');
+        if(s.indexOf(";")>=0||s.indexOf("\n")>=0) s='"'+s+'"';
+        return s;
+      });
+      csvRows.push(row.join(";"));
     });
-    csvRows.push(row.join(";"));
+    downloadBlob(csvRows.join("\r\n"), "inspecoes_"+profile+".csv", "text/csv;charset=utf-8");
   });
-  downloadBlob(csvRows.join("\r\n"), "inspecoes_"+profile+".csv", "text/csv;charset=utf-8");
 }
 async function exportXLSX(){
-  const profile = exportProfileSel;
-  const rows = allHistory.filter(r=>profileFromRecord(r)===profile);
-  const headers = exportHeadersList(profile);
-  const baseCols = exportBaseColumns(profile).length;
-  const keys = exportChecklistKeys(profile);
+  const profiles = getSelectedProfiles();
+  if(!profiles.length){ alert("Nenhum perfil selecionado."); return; }
   const wb = new ExcelJS.Workbook();
-  const sheetName = checklistProfiles[profile].label.replace(/[\\/*?:\[\]]/g,"-").substring(0,31);
-  const ws = wb.addWorksheet(sheetName);
+  let hasData = false;
+  for(const profile of profiles){
+    const rows = allHistory.filter(r=>profileFromRecord(r)===profile);
+    if(!rows.length) continue;
+    hasData = true;
+    const headers = exportHeadersList(profile);
+    const baseCols = exportBaseColumns(profile).length;
+    const keys = exportChecklistKeys(profile);
+    const sheetName = checklistProfiles[profile].label.replace(/[\\/*?:\[\]]/g,"-").substring(0,31);
+    const ws = wb.addWorksheet(sheetName);
 
-  ws.addRow(headers);
-  rows.forEach(r=>{ ws.addRow(exportRow(r, profile)); });
+    ws.addRow(headers);
+    rows.forEach(r=>{ ws.addRow(exportRow(r, profile)); });
 
-  // largura das colunas - identica ao layout do HTA (mesmas colunas fixas + colunas de observacao)
-  const fixedWidths = {1:14, 2:16, 3:68, 4:22, 5:14, 6:20};
-  const obsCols = keys.map((k,i)=> baseCols + 2 + (i*2)); // 1-indexado
-  for(let c=1;c<=headers.length;c++){
-    const col = ws.getColumn(c);
-    if(fixedWidths[c]) col.width = fixedWidths[c];
-    else if(obsCols.includes(c)) col.width = 32;
-    else {
-      // aproximacao de autofit: maior conteudo da coluna (cabecalho ou dados), limitado a uma faixa legivel
-      let maxLen = String(headers[c-1]||"").length;
-      rows.forEach(r=>{ const v = exportRow(r,profile)[c-1]; const l = String(v==null?"":v).length; if(l>maxLen) maxLen=l; });
-      col.width = Math.min(Math.max(maxLen+2, 10), 40);
-    }
-  }
-  ws.getColumn(1).numFmt = "0.00"; // RESULTADO - Media
-  if(obsCols.length) obsCols.forEach(c=> ws.getColumn(c).alignment = {wrapText:true, vertical:"bottom"});
-  ws.getColumn(3).alignment = {wrapText:true, vertical:"bottom"}; // Padrao de cadastro
-
-  const headerRow = ws.getRow(1);
-  headerRow.height = 35;
-  headerRow.eachCell(cell=>{
-    cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF00B0F0"}};
-    cell.font = {bold:true, color:{argb:"FF000000"}};
-    cell.alignment = {horizontal:"center", vertical:"middle", wrapText:true};
-  });
-  // bordas finas em toda a area usada, alinhamento vertical inferior nos dados (igual ao HTA)
-  for(let rIdx=1; rIdx<=rows.length+1; rIdx++){
-    const row = ws.getRow(rIdx);
+    // largura das colunas - identica ao layout do HTA (mesmas colunas fixas + colunas de observacao)
+    const fixedWidths = {1:14, 2:16, 3:68, 4:22, 5:14, 6:20};
+    const obsCols = keys.map((k,i)=> baseCols + 2 + (i*2)); // 1-indexado
     for(let c=1;c<=headers.length;c++){
-      const cell = row.getCell(c);
-      cell.border = {top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
-      if(rIdx>1 && !cell.alignment) cell.alignment = {vertical:"bottom"};
+      const col = ws.getColumn(c);
+      if(fixedWidths[c]) col.width = fixedWidths[c];
+      else if(obsCols.includes(c)) col.width = 32;
+      else {
+        // aproximacao de autofit: maior conteudo da coluna (cabecalho ou dados), limitado a uma faixa legivel
+        let maxLen = String(headers[c-1]||"").length;
+        rows.forEach(r=>{ const v = exportRow(r,profile)[c-1]; const l = String(v==null?"":v).length; if(l>maxLen) maxLen=l; });
+        col.width = Math.min(Math.max(maxLen+2, 10), 40);
+      }
     }
-  }
-  ws.views = [{state:"frozen", ySplit:1}];
-  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
+    ws.getColumn(1).numFmt = "0.00"; // RESULTADO - Media
+    if(obsCols.length) obsCols.forEach(c=> ws.getColumn(c).alignment = {wrapText:true, vertical:"bottom"});
+    ws.getColumn(3).alignment = {wrapText:true, vertical:"bottom"}; // Padrao de cadastro
 
+    const headerRow = ws.getRow(1);
+    headerRow.height = 35;
+    headerRow.eachCell(cell=>{
+      cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF00B0F0"}};
+      cell.font = {bold:true, color:{argb:"FF000000"}};
+      cell.alignment = {horizontal:"center", vertical:"middle", wrapText:true};
+    });
+    // bordas finas em toda a area usada, alinhamento vertical inferior nos dados (igual ao HTA)
+    for(let rIdx=1; rIdx<=rows.length+1; rIdx++){
+      const row = ws.getRow(rIdx);
+      for(let c=1;c<=headers.length;c++){
+        const cell = row.getCell(c);
+        cell.border = {top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
+        if(rIdx>1 && !cell.alignment) cell.alignment = {vertical:"bottom"};
+      }
+    }
+    ws.views = [{state:"frozen", ySplit:1}];
+    ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
+  }
+  if(!hasData){ alert("Nenhum registro encontrado para os perfis selecionados."); return; }
+  const suffix = profiles.length === 1 ? profiles[0] : "multiplos";
   const buf = await wb.xlsx.writeBuffer();
-  downloadBlob(buf, "PLANILHA_ATUAL_"+profile+".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  downloadBlob(buf, "PLANILHA_ATUAL_"+suffix+".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
 function downloadBlob(content, filename, mime){
   const blob = new Blob([content], {type:mime});
@@ -2228,7 +2312,15 @@ function buildOptTabs(){
     const b = document.createElement("button");
     b.innerText = t.replace("_"," ");
     b.className = t===adminActiveTipo ? "active" : "";
-    b.onclick = ()=>{ adminActiveTipo=t; buildOptTabs(); renderAdminOptions(); };
+    b.onclick = async ()=>{
+      adminActiveTipo = t;
+      buildOptTabs();
+      renderAdminOptions();
+      if(!opcoesCache[t] || !opcoesCache[t].length){
+        await loadOpcoes(t);
+        renderAdminOptions();
+      }
+    };
     wrap.appendChild(b);
   });
 }
