@@ -245,6 +245,7 @@ input:checked + .slider:before{transform:translateX(16px);}
   <button class="tabbtn lab-only" data-tab="dashboard" onclick="showTab('dashboard')">Dashboard</button>
   <button class="tabbtn lab-only" data-tab="importar" onclick="showTab('importar')">Importar historico antigo</button>
   <button class="tabbtn lab-only" data-tab="opcoes" onclick="showTab('opcoes')">Opcoes cadastradas</button>
+  <button class="tabbtn lab-only" data-tab="copiaselb" onclick="showTab('copiaselb')">Copia rapida SELB</button>
   <button class="tabbtn master-only" data-tab="higienizacao" onclick="showTab('higienizacao')">Higienizacao (Master)</button>
 </nav>
 
@@ -447,6 +448,54 @@ input:checked + .slider:before{transform:translateX(16px);}
     <div class="opt-add">
       <input type="text" id="optNewValue" placeholder="Nova opcao...">
       <button class="btn primary" onclick="adminAddOption()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== COPIA RAPIDA SELB ===================== -->
+<div class="view" id="view-copiaselb">
+  <div class="card">
+    <div class="toprow" style="margin-bottom:14px;">
+      <div>
+        <div class="card-title" style="margin-bottom:2px;">Copia rapida SELB</div>
+        <div class="hint">Cole os SELBs abaixo (um por linha). O sistema consulta os equipamentos ja categorizados e separa os encontrados dos nao categorizados.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn" onclick="limparCopiaSELB()">Limpar</button>
+        <button class="btn primary" onclick="consultarCopiaSELB()">Consultar</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+
+      <!-- ENTRADA -->
+      <div>
+        <div style="font-weight:700;font-size:13px;color:var(--green-dark);margin-bottom:6px;">📋 SELBs para consultar</div>
+        <textarea id="copiaSelbInput" placeholder="Cole os SELBs aqui, um por linha:&#10;&#10;SELB001&#10;SELB002&#10;SELB003&#10;..."
+          style="width:100%;height:420px;resize:vertical;font-family:monospace;font-size:13px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);box-sizing:border-box;"></textarea>
+        <div style="margin-top:6px;font-size:12px;color:var(--muted);" id="copiaSelbInputCount">0 SELBs inseridos</div>
+      </div>
+
+      <!-- ENCONTRADOS -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-weight:700;font-size:13px;color:var(--green-dark);">✅ Encontrados <span id="copiaSelbFoundCount" style="font-weight:400;color:var(--muted);font-size:12px;"></span></div>
+          <button class="btn sm" onclick="copiarTexto('copiaSelbFoundText')" title="Copiar resultado">Copiar</button>
+        </div>
+        <textarea id="copiaSelbFoundText" readonly placeholder="Os SELBs encontrados aparecerão aqui com sua categoria..."
+          style="width:100%;height:420px;resize:vertical;font-family:monospace;font-size:13px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);box-sizing:border-box;cursor:default;"></textarea>
+      </div>
+
+      <!-- NÃO CATEGORIZADOS -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-weight:700;font-size:13px;color:#c0392b;">❌ Nao categorizados <span id="copiaSelbNotFoundCount" style="font-weight:400;color:var(--muted);font-size:12px;"></span></div>
+          <button class="btn sm" onclick="copiarTexto('copiaSelbNotFoundText')" title="Copiar nao categorizados">Copiar</button>
+        </div>
+        <textarea id="copiaSelbNotFoundText" readonly placeholder="Os SELBs nao encontrados aparecerao aqui..."
+          style="width:100%;height:420px;resize:vertical;font-family:monospace;font-size:13px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);box-sizing:border-box;cursor:default;"></textarea>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1274,6 +1323,7 @@ function showTab(tab){
     }
   }
   if(tab==="higienizacao"){ initHigienizacaoTab(); }
+  if(tab==="copiaselb"){ initCopiaSELBTab(); }
 }
 
 /* =====================================================================
@@ -2365,6 +2415,90 @@ async function adminAddOption(){
   refreshFilterSelects();
   buildCategoriaMultiSelects();
 }
+
+/* =====================================================================
+   COPIA RAPIDA SELB
+   ===================================================================== */
+(function(){
+  function normSelb(v){ return String(v||"").trim().toUpperCase(); }
+
+  function buildSelbIndex(){
+    // Usa catalogRecords (deduplica por SELB, mais recente vence) igual ao catalogo
+    const index = new Map();
+    catalogRecords().forEach(r => {
+      const key = normSelb(r.selb);
+      if(key) index.set(key, r);
+    });
+    return index;
+  }
+
+  window.consultarCopiaSELB = function(){
+    const raw = E("copiaSelbInput").value;
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+    if(!lines.length){
+      alert("Cole pelo menos um SELB para consultar.");
+      return;
+    }
+
+    const index = buildSelbIndex();
+    const found = [];
+    const notFound = [];
+    const seen = new Set(); // evita duplicatas na entrada
+
+    lines.forEach(line => {
+      const key = normSelb(line);
+      if(!key || seen.has(key)) return;
+      seen.add(key);
+
+      const r = index.get(key);
+      if(r){
+        const categoria = resultQuality(r) || "—";
+        found.push(key + "\t" + categoria);
+      } else {
+        notFound.push(key);
+      }
+    });
+
+    E("copiaSelbFoundText").value  = found.join("\n");
+    E("copiaSelbNotFoundText").value = notFound.join("\n");
+    E("copiaSelbFoundCount").innerText    = found.length    ? "("+found.length+")"    : "(nenhum)";
+    E("copiaSelbNotFoundCount").innerText = notFound.length ? "("+notFound.length+")" : "(nenhum)";
+  };
+
+  window.limparCopiaSELB = function(){
+    ["copiaSelbInput","copiaSelbFoundText","copiaSelbNotFoundText"].forEach(id => E(id).value = "");
+    E("copiaSelbInputCount").innerText    = "0 SELBs inseridos";
+    E("copiaSelbFoundCount").innerText    = "";
+    E("copiaSelbNotFoundCount").innerText = "";
+  };
+
+  window.copiarTexto = function(textareaId){
+    const el = E(textareaId);
+    if(!el || !el.value){ alert("Nada para copiar."); return; }
+    navigator.clipboard.writeText(el.value).then(()=>{
+      const orig = el.style.background;
+      el.style.background = "var(--green-light, #e8f5e9)";
+      setTimeout(()=>{ el.style.background = orig; }, 600);
+    }).catch(()=>{
+      el.select();
+      document.execCommand("copy");
+    });
+  };
+
+  // Inicializado pelo showTab
+  let _copiaSelbListenerAdded = false;
+  window.initCopiaSELBTab = function(){
+    if(_copiaSelbListenerAdded) return;
+    const inp = E("copiaSelbInput");
+    if(!inp) return;
+    inp.addEventListener("input", ()=>{
+      const n = inp.value.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length>0).length;
+      E("copiaSelbInputCount").innerText = n + (n===1 ? " SELB inserido" : " SELBs inseridos");
+    });
+    _copiaSelbListenerAdded = true;
+  };
+})();
 
 /* =====================================================================
    IMPORTACAO DO HISTORICO ANTIGO
